@@ -1,0 +1,1256 @@
+---
+# OVERRIDES
+# -----------------------------------------------------------------------------
+
+
+# Host-Specific Variables
+# -----------------------------------------------------------------------------
+  is_dns_client: True
+  is_logging_client: True
+  is_ntp_client: True
+  is_proxy_client: True
+  is_vpn_client: True
+
+  is_dhcp_server: True
+  is_dns_server: True
+  is_logging_server: True
+  is_ntp_server: True
+  is_proxy_server: True
+  is_vpn_server: True
+
+
+# "common" role variables
+  apt_install_recommended_packages: True
+  apt_install_suggested_packages: True
+  apt_periodic_enable: True
+  apt_periodic_update_package_lists: True
+  apt_periodic_download_upgradeable_packages: True
+  apt_periodic_autoclean_interval: True
+  apt_periodic_verbose: True
+  apt_sources:
+    - comment: "Main distribution repository (binaries)"
+      type: "deb"
+      uri: "http://ftp.us.debian.org/debian/"
+      suite: "buster"
+      components: "main contrib non-free"
+    - comment: "Main distribution repository (sources)"
+      type: "deb-src"
+      uri: "http://ftp.us.debian.org/debian/"
+      suite: "buster"
+      components: "main contrib non-free"
+    - comment: "Updated distribution binary repository (binaries)"
+      type: "deb"
+      uri: "http://ftp.us.debian.org/debian/"
+      suite: "buster-updates"
+      components: "main contrib non-free"
+    - comment: "Updated distribution repository (sources)"
+      type: "deb-src"
+      uri: "http://ftp.us.debian.org/debian/"
+      suite: "buster-updates"
+      components: "main contrib non-free"
+    - comment: "Distribution security updates (binaries)"
+      type: "deb"
+      uri: "http://security.debian.org/debian-security"
+      suite: "buster/updates"
+      components: "main contrib non-free"
+    - comment: "Distribution security updates (sources)"
+      type: "deb-src"
+      uri: "http://security.debian.org/debian-security"
+      suite: "buster/updates"
+      components: "main contrib non-free"
+    - comment: "Distribution backports (binaries)"
+      type: "deb"
+      uri: "http://ftp.us.debian.org/debian/"
+      suite: "buster-backports"
+      components: "main contrib non-free"
+    - comment: "Distribution backports (sources)"
+      type: "deb-src"
+      uri: "http://ftp.us.debian.org/debian/"
+      suite: "buster-backports"
+      components: "main contrib non-free"
+
+  bridge_hotplug: "yes"
+  hostname: "router-1"
+
+  logging_rotation_interval: "weekly"
+  logging_number_backlog_intervals: "4"
+  logging_compress_logs: True
+
+  grub_default: "0"
+  grub_timeout: "5"
+  grub_distributor: "`lsb_release -i -s 2> /dev/null || echo Debian`"
+  grub_cmdline_linux_default: "quiet"
+  grub_cmdline_linux: "console=ttyS0,115200 earlyprint=serial,ttyS0,115200"
+  grub_terminal: "serial"
+  grub_serial_command: "serial --unit=0 --speed=115200 --stop=1"
+  grub_disable_recovery_mode_menu_entries: False
+
+  initramfs_modules: "most"
+  initramfs_use_busybox: True
+  initramfs_load_keymap: False
+  initramfs_compression_algorithm: "gzip"
+  initramfs_nfs_network_interface: ""
+  initramfs_nfs_root: "auto"
+
+  physical_ethernet_interfaces:
+    - comment: "Provisioning interface (near serial port)"
+      name: "enp2s0"
+      ipv4_address_type: "dhcp"
+#      ipv4_addresses:
+#      ipv4_static_routes:
+#TODO    - subnet: "a.b.c.d"
+#          netmask: "32"
+#          via: "w.x.y.z"
+    - comment: "Trunk to internal switch (middle)"
+      name: "enp3s0"
+      ipv4_address_type: "manual"
+#      ipv4_addresses:
+#      ipv4_static_routes:
+    - comment: "Internet uplink (near USB ports)"
+      name: "enp4s0"
+      ipv4_address_type: "manual"
+#      ipv4_address_type: "static"
+#      ipv4_addresses:
+#        - address: "10.255.255.254"
+#          netmask: "24"
+#      ipv4_static_routes:
+
+  pre_login_message: "This is a private computing facility.\nUnauthorized access is prohibited.\n\n"
+
+  sshd_allow_groups:
+    - "ssh-users"
+  sshd_use_ecdsa_host_key: True
+  sshd_use_ed25519_host_key: True
+  sshd_use_rsa_host_key: True
+  sshd_supported_ciphers: "chacha20-poly1305@openssh.com,aes256-gcm@openssh.com,aes128-gcm@openssh.com,aes256-ctr,aes192-ctr,aes192-ctr"
+  sshd_supported_macs: "hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256"
+  sshd_supported_kexs: "curve25519-sha256@libssh.org,curve25519-sha256,diffie-hellman-group-exchange-sha256,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256"
+  sshd_password_authentication: True
+  sshd_permit_root_login: "without-password"
+  sshd_pubkey_authentication: True
+  sshd_allow_agent_forwarding:  False
+  sshd_allow_tcp_forwarding: True
+  sshd_allow_x11_forwarding: False
+
+  users_unprivileged:
+    - comment: "William Atkins"
+      username: "watkins"
+      createhome: "yes"
+      shell: "/bin/bash"
+  users_ssh:
+    - "last-resort"
+    - "root"
+    - "watkins"
+  users_sudo:
+    - "watkins"
+
+
+# "device/access-point" role variables
+  wireless_configuration:
+    - comment: "2.4 GHz WiFi"
+      physical_interface_name: "wlp1s0"
+      bssid: "00:0d:b9:51:8c:00"
+      driver: "nl80211"
+      country: "US"
+      hw_mode: "g"
+      wmm_enable: "1"
+      ieee80211d: "1"
+      ieee80211h: "1"
+      ieee80211n: "1"
+      wps_state: "0"
+      ht_capab: "[HT40+][SHORT-GI-40][TX-STBC][RX-STBC1][DSSS_CCK-40]"
+      channel: "6"   # Warn about auto-select causing unreliability in raising interface, especially on 5GHz
+      first_wireless_network:
+        - comment: "Guest devices"
+          ssid: "BrightLight - Guest"
+          wpa: "2"
+          wpa_passphrase: "welcomeguests"
+          wpa_key_mgmt: "WPA-PSK-SHA256 WPA-PSK"
+          rsn_pairwise: "CCMP"
+          bridge: "br_guest"
+      other_wireless_networks:
+        - comment: "IoT devices"
+          bss: "wlp1s0_iot"
+          ssid: "BrightLight - IoT"
+          wpa: "2"
+          wpa_passphrase: "Ye0Oofoo{t;o"
+          wpa_key_mgmt: "WPA-PSK-SHA256 WPA-PSK"
+          rsn_pairwise: "CCMP"
+          bridge: "br_iot"
+        - comment: "Work devices"
+          bss: "wlp1s0_work"
+          ssid: "BrightLight - Work"
+          wpa: "2"
+          wpa_passphrase: "Nu&phaquu1zo"
+          wpa_key_mgmt: "WPA-PSK-SHA256 WPA-PSK"
+          rsn_pairwise: "CCMP"
+          bridge: "br_work"
+        - comment: "Family devices"
+          bss: "wlp1s0_family"
+          ssid: "BrightLight - Family"
+          wpa: "2"
+          wpa_passphrase: "EeKei>xei9wa"
+          wpa_key_mgmt: "WPA-PSK-SHA256 WPA-PSK"
+          rsn_pairwise: "CCMP"
+          bridge: "br_family"
+        - comment: "Network administration devices"
+          bss: "wlp1s0_admin"
+          ssid: "BrightLight - Admin"
+          wpa: "2"
+          wpa_passphrase: "0bnw3eE56-+]"
+          wpa_key_mgmt: "WPA-PSK-SHA256 WPA-PSK"
+          rsn_pairwise: "CCMP"
+          bridge: "br_admin"
+    - comment: "5 GHz WiFi"
+      physical_interface_name: "wlp5s0"
+      bssid: "00:0d:b9:51:8d:00"
+      driver: "nl80211"
+      country: "US"
+      hw_mode: "a"
+      wmm_enable: "1"
+      ieee80211d: "1"
+      ieee80211h: "1"
+      ieee80211n: "1"
+      wps_state: "0"
+      ht_capab: "[HT40+][SHORT-GI-40][TX-STBC][RX-STBC1][DSSS_CCK-40]"
+      channel: "44"   # Warn about auto-select causing unreliability in raising interface, especially on 5GHz
+      first_wireless_network:
+        - comment: "Guest devices"
+          ssid: "BrightLight - Guest"
+          wpa: "2"
+          wpa_passphrase: "welcomeguests"
+          wpa_key_mgmt: "WPA-PSK-SHA256 WPA-PSK"
+          rsn_pairwise: "CCMP"
+          bridge: "br_guest"
+      other_wireless_networks:
+        - comment: "IoT devices"
+          ssid: "BrightLight - IoT"
+          bss: "wlp5s0_iot"
+          wpa: "2"
+          wpa_passphrase: "Ye0Oofoo{t;o"
+          wpa_key_mgmt: "WPA-PSK-SHA256 WPA-PSK"
+          rsn_pairwise: "CCMP"
+          bridge: "br_iot"
+        - comment: "Work devices"
+          ssid: "BrightLight - Work"
+          bss: "wlp5s0_work"
+          wpa: "2"
+          wpa_passphrase: "Nu&phaquu1zo"
+          wpa_key_mgmt: "WPA-PSK-SHA256 WPA-PSK"
+          rsn_pairwise: "CCMP"
+          bridge: "br_work"
+        - comment: "Family devices"
+          ssid: "BrightLight - Family"
+          bss: "wlp5s0_family"
+          wpa: "2"
+          wpa_passphrase: "EeKei>xei9wa"
+          wpa_key_mgmt: "WPA-PSK-SHA256 WPA-PSK"
+          rsn_pairwise: "CCMP"
+          bridge: "br_family"
+        - comment: "Network administration devices"
+          bss: "wlp5s0_admin"
+          ssid: "BrightLight - Admin"
+          wpa: "2"
+          wpa_passphrase: "0bnw3eE56-+]"
+          wpa_key_mgmt: "WPA-PSK-SHA256 WPA-PSK"
+          rsn_pairwise: "CCMP"
+          bridge: "br_admin"
+
+  regulatory_domain: "US"
+
+
+# "device/router" role variables
+  ipv4_nat_interfaces:
+    - "enp4s0"
+  ipv6_nat_interfaces:
+
+  virtual_vlan_interfaces:
+    - comment: "Guest devices VLAN"
+      parent_interface_name: "enp3s0"
+      id: "10"
+      ipv4_address_type: "manual"
+    - comment: "IoT devices VLAN"
+      parent_interface_name: "enp3s0"
+      id: "20"
+      ipv4_address_type: "manual"
+    - comment: "Work devices VLAN"
+      parent_interface_name: "enp3s0"
+      id: "30"
+      ipv4_address_type: "manual"
+    - comment: "Family devices VLAN"
+      parent_interface_name: "enp3s0"
+      id: "40"
+      ipv4_address_type: "manual"
+    - comment: "Network administration VLAN"
+      parent_interface_name: "enp3s0"
+      id: "50"
+      ipv4_address_type: "manual"
+
+  virtual_bridge_interfaces:
+    - name: "br_guest"
+      comment: "Guest devices bridge"
+      bridge_stp: "off"
+      child_interfaces:
+        - "enp3s0.10"
+        - "wlp1s0"
+        - "wlp5s0"
+      ipv4_address_type: "static"
+      ipv4_addresses:
+        - address: "192.168.10.1"
+          netmask: "24"
+    - name: "br_iot"
+      comment: "IoT devices bridge"
+      bridge_stp: "off"
+      child_interfaces:
+        - "enp3s0.20"
+        - "wlp1s0_iot"
+        - "wlp5s0_iot"
+      ipv4_address_type: "static"
+      ipv4_addresses:
+        - address: "192.168.20.1"
+          netmask: "24"
+    - name: "br_work"
+      comment: "Work devices bridge"
+      bridge_stp: "off"
+      child_interfaces:
+        - "enp3s0.30"
+        - "wlp1s0_work"
+        - "wlp5s0_work"
+      ipv4_address_type: "static"
+      ipv4_addresses:
+        - address: "192.168.30.1"
+          netmask: "24"
+    - name: "br_family"
+      comment: "Family devices bridge"
+      bridge_stp: "off"
+      child_interfaces:
+        - "enp3s0.40"
+        - "wlp1s0_family"
+        - "wlp5s0_family"
+      ipv4_address_type: "static"
+      ipv4_addresses:
+        - address: "192.168.40.1"
+          netmask: "24"
+    - name: "br_admin"
+      comment: "Network administration bridge"
+      bridge_stp: "off"
+      child_interfaces:
+        - "enp3s0.50"
+        - "wlp1s0_admin"
+        - "wlp5s0_admin"
+      ipv4_address_type: "static"
+      ipv4_addresses:
+        - address: "192.168.50.1"
+          netmask: "24"
+
+
+# "device/firewall" role variables
+#  firewall_zones:
+#    - comment: "Family devices"
+#      name: "FAMILY"
+#      interface: "br_family"
+#      ipv4_cidr: "192.168.0.0/24"
+#    - comment: "Work devices"
+#      name: "WORK"
+#      interface: "br_work"
+#      ipv4_cidr: "192.168.1.0/24"
+#    - comment: "IoT devices"
+#      name: "IOT"
+#      interface: "br_iot"
+#      ipv4_cidr: "192.168.2.0/24"
+#    - comment: "Guest devices"
+#      name: "GUEST"
+#      interface: "br_guest"
+#      ipv4_cidr: "192.168.2.0/24"
+#    - comment: "Internet"
+#      name: "INTERNET"
+#      interfaces:
+#        - "ens3"
+#      ipv4_cidr: "0.0.0.0/0"
+
+  firewall_user_defined_chain_declarations:
+    ipv4:
+      filter:
+        - comment: "Log and accept"
+          chain: LOG_ACCEPT
+        - comment: "Log and drop"
+          chain: LOG_DROP
+        - comment: "Log and reject"
+          chain: LOG_REJECT
+        - comment: "Handle traffic received on the loopback interface"
+          chain: LOOP_RECV
+        - comment: "Handle traffic sent on the loopback interface"
+          chain: LOOP_SEND
+        - comment: "Handle traffic directed at this host from the Internet"
+          chain: HOST_RECV_INTERNET
+        - comment: "Handle traffic directed at this host from ADMIN"
+          chain: HOST_RECV_ADMIN
+        - comment: "Handle all other traffic directed at this host"
+          chain: HOST_RECV
+        - comment: "Handle traffic sent by this host to the Internet"
+          chain: HOST_SEND_INTERNET
+        - comment: "Handle traffic sent by this host to ADMIN"
+          chain: HOST_SEND_ADMIN
+        - comment: "Handle all other traffic sent by this host"
+          chain: HOST_SEND
+        - comment: "Handle traffic forwarded from GUEST to INTERNET"
+          chain: FWD_GUEST_INTERNET
+        - comment: "Handle traffic forwarded from IOT to INTERNET"
+          chain: FWD_IOT_INTERNET
+        - comment: "Handle traffic forwarded from WORK to INTERNET"
+          chain: FWD_WORK_INTERNET
+        - comment: "Handle traffic forwarded from FAMILY to INTERNET"
+          chain: FWD_FAMILY_INTERNET
+        - comment: "Handle traffic forwarded from ADMIN to INTERNET"
+          chain: FWD_ADMIN_INTERNET
+        - comment: "Handle traffic forwarded from ADMIN to IOT"
+          chain: FWD_ADMIN_IOT
+        - comment: "Handle traffic forwarded from ADMIN to FAMILY"
+          chain: FWD_ADMIN_FAMILY
+      mangle:
+      nat:
+      raw:
+      security:
+
+  firewall_rules:
+    ipv4:
+      filter:
+        INPUT:
+            # Set the default action for this chain
+          - comment: "Drop traffic destined for this host if no specific rule matches"
+            policy: ACCEPT		# TODO
+
+            # Direct traffic into the desired user-defined chain
+          - comment: "Direct loopback traffic to the LOOP_RECV chain"
+            in_interface: lo
+            jump: LOOP_RECV
+          - comment: "Direct Internet traffic to the HOST_RECV_INTERNET chain"
+            in_interface: enp4s0
+            jump: HOST_RECV_INTERNET
+          - comment: "Direct GUEST traffic to the HOST_RECV chain"
+            in_interface: br_guest
+            jump: HOST_RECV
+          - comment: "Direct IOT traffic to the HOST_RECV chain"
+            in_interface: br_iot
+            jump: HOST_RECV
+          - comment: "Direct WORK traffic to the HOST_RECV chain"
+            in_interface: br_work
+            jump: HOST_RECV
+          - comment: "Direct ADMIN traffic to the HOST_RECV_ADMIN chain"
+            in_interface: br_admin
+            jump: HOST_RECV_ADMIN
+
+        FORWARD:
+            # Set the default action for this chain
+          - comment: "Drop traffic to-be-forwarded by this host if no specific rule matches"
+            policy: ACCEPT		# TODO
+
+            # Direct traffic into the desired user-defined chain
+          - comment: "Direct traffic to-be-forwarded from GUEST to INTERNET"
+            in_interface: br_guest
+            out_interface: enp4s0
+            jump: FWD_GUEST_INTERNET
+          - comment: "Direct traffic to-be-forwarded from IOT to INTERNET"
+            in_interface: br_iot
+            out_interface: enp4s0
+            jump: FWD_IOT_INTERNET
+          - comment: "Direct traffic to-be-forwarded from WORK to INTERNET"
+            in_interface: br_work
+            out_interface: enp4s0
+            jump: FWD_WORK_INTERNET
+          - comment: "Direct traffic to-be-forwarded from FAMILY to INTERNET"
+            in_interface: br_family
+            out_interface: enp4s0
+            jump: FWD_FAMILY_INTERNET
+          - comment: "Direct traffic to-be-forwarded from ADMIN to INTERNET"
+            in_interface: br_admin
+            out_interface: enp4s0
+            jump: FWD_ADMIN_INTERNET
+          - comment: "Direct traffic to-be-forwarded from ADMIN to IOT"
+            in_interface: br_admin
+            out_interface: br_iot
+            jump: FWD_ADMIN_IOT
+          - comment: "Direct traffic to-be-forwarded from ADMIN to FAMILY"
+            in_interface: br_admin
+            out_interface: br_family
+            jump: FWD_ADMIN_FAMILY
+
+        OUTPUT:
+            # Set the default action for this chain
+          - comment: "Set default action for filter table OUTPUT chain"
+            policy: ACCEPT		# TODO
+
+            # Direct traffic into the desired user-defined chain
+          - comment: "Direct loopback traffic to the LOOP_SEND chain"
+            out_interface: lo
+            jump: LOOP_SEND
+          - comment: "Direct Internet traffic to the HOST_SEND_INTERNET chain"
+            out_interface: enp4s0
+            jump: HOST_SEND_INTERNET
+          - comment: "Direct GUEST traffic to the HOST_SEND chain"
+            out_interface: br_guest
+            jump: HOST_SEND
+          - comment: "Direct IOT traffic to the HOST_SEND chain"
+            out_interface: br_iot
+            jump: HOST_SEND
+          - comment: "Direct WORK traffic to the HOST_SEND chain"
+            out_interface: br_work
+            jump: HOST_SEND
+          - comment: "Direct FAMILY traffic to the HOST_SEND chain"
+            out_interface: br_family
+            jump: HOST_SEND
+          - comment: "Direct ADMIN traffic to the HOST_SEND_ADMIN chain"
+            out_interface: br_admin
+            jump: HOST_SEND_ADMIN
+
+        user_defined:
+            # Rules to insert into user-defined chains (the order here is preserved)
+          - comment: "Log all received traffic"
+            chain: LOG_ACCEPT
+            jump: LOG
+            log_prefix: "ACCEPT: "
+          - comment: "Accept all received traffic"
+            chain: LOG_ACCEPT
+            jump: ACCEPT
+
+          - comment: "Log all received traffic"
+            chain: LOG_DROP
+            jump: LOG
+            log_prefix: "DROP: "
+          - comment: "Drop all received traffic"
+            chain: LOG_DROP
+            jump: DROP
+
+          - comment: "Log all received traffic"
+            chain: LOG_REJECT
+            jump: LOG
+            log_prefix: "REJECT: "
+          - comment: "Reject all received traffic"
+            chain: LOG_REJECT
+            jump: REJECT
+
+          - comment: "Accept all received traffic"
+            chain: LOOP_RECV
+            jump: ACCEPT
+          - comment: "Accept all sent traffic"
+            chain: LOOP_SEND
+            jump: ACCEPT
+
+          - comment: "Drop all received traffic"
+            chain: HOST_RECV_INTERNET
+            jump: DROP
+          - comment: "Accept all sent traffic"
+            chain: HOST_SEND_INTERNET
+            jump: ACCEPT
+
+          - comment: "Reject all received traffic"
+            chain: HOST_RECV
+            jump: DROP
+          - comment: "Accept all sent traffic"
+            chain: HOST_SEND
+            jump: REJECT
+
+          - comment: "Accept all received traffic"
+            chain: HOST_RECV_ADMIN
+            jump: ACCEPT
+          - comment: "Accept all sent traffic"
+            chain: HOST_SEND_ADMIN
+            jump: ACCEPT
+
+          - comment: "Reject invalid connections"
+            chain: FWD_GUEST_INTERNET
+            ctstate: INVALID
+            jump: REJECT
+          - comment: "Allow established and related connections"
+            chain: FWD_GUEST_INTERNET
+            ctstate: ESTABLISHED,RELATED
+            jump: ACCEPT
+          - comment: "Allow new connections without restriction"
+            chain: FWD_GUEST_INTERNET
+            ctstate: NEW
+            jump: ACCEPT
+            
+          - comment: "Reject invalid connections"
+            chain: FWD_IOT_INTERNET
+            ctstate: INVALID
+            jump: REJECT
+          - comment: "Allow established and related connections"
+            chain: FWD_IOT_INTERNET
+            ctstate: ESTABLISHED,RELATED
+            jump: ACCEPT
+          - comment: "Allow new connections without restriction"
+            chain: FWD_IOT_INTERNET
+            ctstate: NEW
+            jump: ACCEPT
+
+          - comment: "Reject invalid connections"
+            chain: FWD_WORK_INTERNET
+            ctstate: INVALID
+            jump: REJECT
+          - comment: "Allow established and related connections"
+            chain: FWD_WORK_INTERNET
+            ctstate: ESTABLISHED,RELATED
+            jump: ACCEPT
+          - comment: "Allow new connections without restriction"
+            chain: FWD_WORK_INTERNET
+            ctstate: NEW
+            jump: ACCEPT
+
+          - comment: "Reject invalid connections"
+            chain: FWD_FAMILY_INTERNET
+            ctstate: INVALID
+            jump: REJECT
+          - comment: "Allow established and related connections"
+            chain: FWD_FAMILY_INTERNET
+            ctstate: ESTABLISHED,RELATED
+            jump: ACCEPT
+          - comment: "Allow new connections without restriction"
+            chain: FWD_FAMILY_INTERNET
+            ctstate: NEW
+            jump: ACCEPT
+
+          - comment: "Reject invalid connections"
+            chain: FWD_ADMIN_INTERNET
+            ctstate: INVALID
+            jump: REJECT
+          - comment: "Allow established and related connections"
+            chain: FWD_ADMIN_INTERNET
+            ctstate: ESTABLISHED,RELATED
+            jump: ACCEPT
+          - comment: "Allow new connections without restriction"
+            chain: FWD_ADMIN_INTERNET
+            ctstate: NEW
+            jump: ACCEPT
+
+          - comment: "Reject invalid connections"
+            chain: FWD_ADMIN_IOT
+            ctstate: INVALID
+            jump: REJECT
+          - comment: "Allow established and related connections"
+            chain: FWD_ADMIN_IOT
+            ctstate: ESTABLISHED,RELATED
+            jump: ACCEPT
+          - comment: "Allow new connections without restriction"
+            chain: FWD_ADMIN_IOT
+            ctstate: NEW
+            jump: ACCEPT
+
+          - comment: "Reject invalid connections"
+            chain: FWD_ADMIN_FAMILY
+            ctstate: INVALID
+            jump: REJECT
+          - comment: "Allow established and related connections"
+            chain: FWD_ADMIN_FAMILY
+            ctstate: ESTABLISHED,RELATED
+            jump: ACCEPT
+          - comment: "Allow new connections without restriction"
+            chain: FWD_ADMIN_FAMILY
+            ctstate: NEW
+            jump: ACCEPT
+
+#      mangle:
+#        - comment: "Set default action for mangle table PREROUTING chain"
+#          chain: PREROUTING
+#          policy: ACCEPT
+#        - comment: "Set default action for mangle table INPUT chain"
+#          chain: INPUT
+#          policy: ACCEPT
+#        - comment: "Set default action for mangle table FORWARD chain"
+#          chain: FORWARD
+#          policy: ACCEPT
+#        - comment: "Set default action for mangle table OUTPUT chain"
+#          chain: OUTPUT
+#          policy: ACCEPT
+#        - comment: "Set default action for mangle table POSTROUTING chain"
+#          chain: POSTROUTING
+#          policy: ACCEPT
+
+      nat:
+        PREROUTING:
+          - comment: "Set default action for nat table PREROUTING chain"
+            policy: ACCEPT
+
+        INPUT:
+          - comment: "Set default action for nat table INPUT chain"
+            policy: ACCEPT
+
+        OUTPUT:
+          - comment: "Set default action for nat table OUTPUT chain"
+            policy: ACCEPT
+
+        POSTROUTING:
+          - comment: "Set default action for nat table POSTROUTING chain"
+            policy: ACCEPT
+
+          - comment: "Source NAT traffic to the Internet"
+            out_interface: enp4s0
+            jump: MASQUERADE
+
+#      raw:
+#        - comment: "Set default action for raw table PREROUTING chain"
+#          chain: PREROUTING
+#          policy: ACCEPT
+#        - comment: "Set default action for raw table OUTPUT chain"
+#          chain: OUTPUT
+#          policy: ACCEPT
+#      security:
+#        - comment: "Set default action for security table INPUT chain"
+#          chain: INPUT
+#          policy: ACCEPT
+#        - comment: "Set default action for security table FORWARD chain"
+#          chain: FORWARD
+#          policy: ACCEPT
+#        - comment: "Set default action for security table OUTPUT chain"
+#          chain: OUTPUT
+#          policy: ACCEPT
+
+
+# "server/dhcp" role variables
+  dhcp_authoritative: True
+  dhcp_classes:
+   #- name: ""
+   #  content:
+   #    - ""
+  dhcp_ddns_updates: True
+  dhcp_ddns_update_style: "interim"
+  dhcp_ddns_update_keys:
+    - comment: "Default DDNS update key"
+      name: "DDNS_UPDATE"
+      algorithm: "hmac-sha256"
+      secret: "izq0A4W8VIK2zx7Xn5/8XT1klg0Jar76TVPhqkj5Z6k="
+  dhcp_default_lease_time: "43200"
+  dhcp_dns_servers:
+    - "127.0.0.1"
+  dhcp_extra_options:
+   #- ""
+  dhcp_ignore: "client-updates"
+  dhcp_includes:
+    - "/etc/dhcp/ddns.key"
+  dhcp_listen_interfaces:
+    - "br_admin"
+    - "br_family"
+    - "br_guest"
+    - "br_iot"
+    - "br_work"
+  dhcp_log_facility: "local7"
+  dhcp_max_lease_time: "86400"
+  dhcp_static_leases:
+    - comment: "Network admin laptop"
+      hostname: "net-admin"
+      mac_address: "18:db:f2:f7:7a:09"
+      ipv4_address: "192.168.50.10"
+  dhcp_subnets:
+    - comment: "Guest subnet"
+      ipv4_subnet: "192.168.10.0"
+      ipv4_netmask: "255.255.255.0"
+      ipv4_address_range: "192.168.10.100 192.168.10.250"
+      option_code_values:
+        - option_code: "routers"
+          value: "192.168.10.1"
+        - option_code: "broadcast-address"
+          value: "192.168.10.255"
+        - option_code: "domain-name-servers"
+          value: "192.168.10.1"
+        - option_code: "domain-name"
+          value: "\"guest.brightlight.localnet\""
+        - option_code: "domain-search"
+          value: "\"guest.brightlight.localnet\""
+        - option_code: "ntp-servers"
+          value: "192.168.10.1"
+    - comment: "IoT devices subnet"
+      ipv4_subnet: "192.168.20.0"
+      ipv4_netmask: "255.255.255.0"
+      ipv4_address_range: "192.168.20.100 192.168.20.250"
+      option_code_values:
+        - option_code: "routers"
+          value: "192.168.20.1"
+        - option_code: "broadcast-address"
+          value: "192.168.20.255"
+        - option_code: "domain-name-servers"
+          value: "192.168.20.1"
+        - option_code: "domain-name"
+          value: "\"iot.brightlight.localnet\""
+        - option_code: "domain-search"
+          value: "\"iot.brightlight.localnet\""
+        - option_code: "ntp-servers"
+          value: "192.168.20.1"
+    - comment: "Work-owned devices subnet"
+      ipv4_subnet: "192.168.30.0"
+      ipv4_netmask: "255.255.255.0"
+      ipv4_address_range: "192.168.30.100 192.168.30.250"
+      option_code_values:
+        - option_code: "routers"
+          value: "192.168.30.1"
+        - option_code: "broadcast-address"
+          value: "192.168.30.255"
+        - option_code: "domain-name-servers"
+          value: "192.168.30.1"
+        - option_code: "domain-name"
+          value: "\"work.brightlight.localnet\""
+        - option_code: "domain-search"
+          value: "\"work.brightlight.localnet\""
+        - option_code: "ntp-servers"
+          value: "192.168.30.1"
+    - comment: "Family-owned devices subnet"
+      ipv4_subnet: "192.168.40.0"
+      ipv4_netmask: "255.255.255.0"
+      ipv4_address_range: "192.168.40.100 192.168.40.250"
+      option_code_values:
+        - option_code: "routers"
+          value: "192.168.40.1"
+        - option_code: "broadcast-address"
+          value: "192.168.40.255"
+        - option_code: "domain-name-servers"
+          value: "192.168.40.1"
+        - option_code: "domain-name"
+          value: "\"family.brightlight.localnet\""
+        - option_code: "domain-search"
+          value: "\"family.brightlight.localnet\""
+        - option_code: "ntp-servers"
+          value: "192.168.40.1"
+    - comment: "Network administration subnet"
+      ipv4_subnet: "192.168.50.0"
+      ipv4_netmask: "255.255.255.0"
+      ipv4_address_range: "192.168.50.100 192.168.50.250"
+      option_code_values:
+        - option_code: "routers"
+          value: "192.168.50.1"
+        - option_code: "broadcast-address"
+          value: "192.168.50.255"
+        - option_code: "domain-name-servers"
+          value: "192.168.50.1"
+        - option_code: "domain-name"
+          value: "\"admin.brightlight.localnet\""
+        - option_code: "domain-search"
+          value: "\"admin.brightlight.localnet\""
+        - option_code: "ntp-servers"
+          value: "192.168.50.1"
+  dhcp_update_static_leases: True
+  dhcp_zones:
+    - comment: "Guest subnet: forward mapping"
+      name: "guest.brightlight.localnet."
+      primary_ipv4: "127.0.0.1"
+      secondary_ipv4: ""
+      primary_ipv6: "::1"
+      secondary_ipv6: ""
+      key: "DDNS_UPDATE"
+    - comment: "Guest subnet: reverse mapping"
+      name: "10.168.192.in-addr.arpa."
+      primary_ipv4: "127.0.0.1"
+      secondary_ipv4: ""
+      primary_ipv6: "::1"
+      secondary_ipv6: ""
+      key: "DDNS_UPDATE"
+    - comment: "IoT subnet: forward mapping"
+      name: "iot.brightlight.localnet."
+      primary_ipv4: "127.0.0.1"
+      secondary_ipv4: ""
+      primary_ipv6: "::1"
+      secondary_ipv6: ""
+      key: "DDNS_UPDATE"
+    - comment: "IoT subnet: reverse mapping"
+      name: "20.168.192.in-addr.arpa."
+      primary_ipv4: "127.0.0.1"
+      secondary_ipv4: ""
+      primary_ipv6: "::1"
+      secondary_ipv6: ""
+      key: "DDNS_UPDATE"
+    - comment: "Work subnet: forward mapping"
+      name: "work.brightlight.localnet."
+      primary_ipv4: "127.0.0.1"
+      secondary_ipv4: ""
+      primary_ipv6: "::1"
+      secondary_ipv6: ""
+      key: "DDNS_UPDATE"
+    - comment: "Work subnet: reverse mapping"
+      name: "30.168.192.in-addr.arpa."
+      primary_ipv4: "127.0.0.1"
+      secondary_ipv4: ""
+      primary_ipv6: "::1"
+      secondary_ipv6: ""
+      key: "DDNS_UPDATE"
+    - comment: "Family subnet: forward mapping"
+      name: "family.brightlight.localnet."
+      primary_ipv4: "127.0.0.1"
+      secondary_ipv4: ""
+      primary_ipv6: "::1"
+      secondary_ipv6: ""
+      key: "DDNS_UPDATE"
+    - comment: "Family subnet: reverse mapping"
+      name: "40.168.192.in-addr.arpa."
+      primary_ipv4: "127.0.0.1"
+      secondary_ipv4: ""
+      primary_ipv6: "::1"
+      secondary_ipv6: ""
+      key: "DDNS_UPDATE"
+    - comment: "Network administration subnet: forward mapping"
+      name: "admin.brightlight.localnet."
+      primary_ipv4: "127.0.0.1"
+      secondary_ipv4: ""
+      primary_ipv6: "::1"
+      secondary_ipv6: ""
+      key: "DDNS_UPDATE"
+    - comment: "Network administration subnet: reverse mapping"
+      name: "50.168.192.in-addr.arpa."
+      primary_ipv4: "127.0.0.1"
+      secondary_ipv4: ""
+      primary_ipv6: "::1"
+      secondary_ipv6: ""
+      key: "DDNS_UPDATE"
+
+
+# "server/dns" role variables
+  dns_acl_allow_recursion:
+    - "192.168.0.0/16"
+    - "localhost"
+  dns_acl_allow_transfer:
+    - "localhost"
+  dns_ddns_update_keys:
+    - comment: "Default DDNS update key"
+      name: "DDNS_UPDATE"
+      algorithm: "hmac-sha256"
+      secret: "izq0A4W8VIK2zx7Xn5/8XT1klg0Jar76TVPhqkj5Z6k="
+  dns_forward_zones:
+    - comment: "Guest devices"
+      type: "master"
+      zone: "guest.brightlight.localnet"
+      file: "db.guest.brightlight.localnet"
+      notify: "no"
+      allow_update_key: "DDNS_UPDATE"
+      ttl: "3600"
+      primary_ns_fqdn: "ns1.brightlight.localnet"
+      hostmaster: "root.localnet"
+      serial_num: "2020021901"
+      refresh: "3600"
+      retry: "60"
+      expire: "3600"
+      neg_cache_ttl: "7200"
+      records:
+        - name: "@"
+          ttl: ""
+          class: "IN"
+          type: "NS"
+          option: ""
+          rdata: "ns1.brightlight.localnet."
+        - name: "router-1"
+          ttl: ""
+          class: "IN"
+          type: "A"
+          option: ""
+          rdata: "192.168.10.1"
+    - comment: "IoT devices"
+      zone: "iot.brightlight.localnet"
+      type: "master"
+      file: "db.iot.brightlight.localnet"
+      notify: "no"
+      allow_update_key: "DDNS_UPDATE"
+      ttl: "3600"
+      primary_ns_fqdn: "ns1.brightlight.localnet"
+      hostmaster: "root.localnet"
+      serial_num: "2020021901"
+      refresh: "3600"
+      retry: "60"
+      expire: "3600"
+      neg_cache_ttl: "7200"
+      records:
+        - name: "@"
+          ttl: ""
+          class: "IN"
+          type: "NS"
+          option: ""
+          rdata: "ns1.brightlight.localnet."
+        - name: "router-1"
+          ttl: ""
+          class: "IN"
+          type: "A"
+          option: ""
+          rdata: "192.168.20.1"
+    - comment: "Work-owned devices"
+      zone: "work.brightlight.localnet"
+      type: "master"
+      file: "db.work.brightlight.localnet"
+      notify: "no"
+      allow_update_key: "DDNS_UPDATE"
+      ttl: "3600"
+      primary_ns_fqdn: "ns1.brightlight.localnet"
+      hostmaster: "root.localnet"
+      serial_num: "2020021901"
+      refresh: "3600"
+      retry: "60"
+      expire: "3600"
+      neg_cache_ttl: "7200"
+      records:
+        - name: "@"
+          ttl: ""
+          class: "IN"
+          type: "NS"
+          option: ""
+          rdata: "ns1.brightlight.localnet."
+        - name: "router-1"
+          ttl: ""
+          class: "IN"
+          type: "A"
+          option: ""
+          rdata: "192.168.30.1"
+    - comment: "Family-owned devices"
+      zone: "family.brightlight.localnet"
+      type: "master"
+      file: "db.family.brightlight.localnet"
+      notify: "no"
+      allow_update_key: "DDNS_UPDATE"
+      ttl: "3600"
+      primary_ns_fqdn: "ns1.brightlight.localnet"
+      hostmaster: "root.localnet"
+      serial_num: "2020021901"
+      refresh: "3600"
+      retry: "60"
+      expire: "3600"
+      neg_cache_ttl: "7200"
+      records:
+        - name: "@"
+          ttl: ""
+          class: "IN"
+          type: "NS"
+          option: ""
+          rdata: "ns1.brightlight.localnet."
+        - name: "router-1"
+          ttl: ""
+          class: "IN"
+          type: "A"
+          option: ""
+          rdata: "192.168.40.1"
+    - comment: "Network administration subnet"
+      zone: "admin.brightlight.localnet"
+      type: "master"
+      file: "db.admin.brightlight.localnet"
+      notify: "no"
+      allow_update_key: "DDNS_UPDATE"
+      ttl: "3600"
+      primary_ns_fqdn: "ns1.brightlight.localnet"
+      hostmaster: "root.localnet"
+      serial_num: "2020021901"
+      refresh: "3600"
+      retry: "60"
+      expire: "3600"
+      neg_cache_ttl: "7200"
+      records:
+        - name: "@"
+          ttl: ""
+          class: "IN"
+          type: "NS"
+          option: ""
+          rdata: "ns1.brightlight.localnet."
+        - name: "router-1"
+          ttl: ""
+          class: "IN"
+          type: "A"
+          option: ""
+          rdata: "192.168.50.1"
+  dns_reverse_zones:
+    - comment: "Guest devices"
+      type: "master"
+      zone: "10.168.192.in-addr.arpa"
+      file: "db.10.168.192.in-addr.arpa"
+      notify: "no"
+      allow_update_key: "DDNS_UPDATE"
+      ttl: "3600"
+      primary_ns_fqdn: "ns1.brightlight.localnet"
+      hostmaster: "root.localnet"
+      serial_num: "2020021901"
+      refresh: "3600"
+      retry: "60"
+      expire: "3600"
+      neg_cache_ttl: "7200"
+      records:
+        - name: "@"
+          ttl: ""
+          class: "IN"
+          type: "NS"
+          option: ""
+          rdata: "ns1.brightlight.localnet."
+        - name: "router-1"
+          ttl: ""
+          class: "IN"
+          type: "A"
+          option: ""
+          rdata: "192.168.10.1"
+    - comment: "IoT devices"
+      zone: "20.168.192.in-addr.arpa"
+      type: "master"
+      file: "db.20.168.192.in-addr.arpa"
+      notify: "no"
+      allow_update_key: "DDNS_UPDATE"
+      ttl: "3600"
+      primary_ns_fqdn: "ns1.brightlight.localnet"
+      hostmaster: "root.localnet"
+      serial_num: "2020021901"
+      refresh: "3600"
+      retry: "60"
+      expire: "3600"
+      neg_cache_ttl: "7200"
+      records:
+        - name: "@"
+          ttl: ""
+          class: "IN"
+          type: "NS"
+          option: ""
+          rdata: "ns1.brightlight.localnet."
+        - name: "router-1"
+          ttl: ""
+          class: "IN"
+          type: "A"
+          option: ""
+          rdata: "192.168.20.1"
+    - comment: "Work-owned devices"
+      zone: "30.168.192.in-addr.arpa"
+      type: "master"
+      file: "db.30.168.192.in-addr.arpa"
+      notify: "no"
+      allow_update_key: "DDNS_UPDATE"
+      ttl: "3600"
+      primary_ns_fqdn: "ns1.brightlight.localnet"
+      hostmaster: "root.localnet"
+      serial_num: "2020021901"
+      refresh: "3600"
+      retry: "60"
+      expire: "3600"
+      neg_cache_ttl: "7200"
+      records:
+        - name: "@"
+          ttl: ""
+          class: "IN"
+          type: "NS"
+          option: ""
+          rdata: "ns1.brightlight.localnet."
+        - name: "router-1"
+          ttl: ""
+          class: "IN"
+          type: "A"
+          option: ""
+          rdata: "192.168.30.1"
+    - comment: "Family-owned devices"
+      zone: "40.168.192.in-addr.arpa"
+      type: "master"
+      file: "db.40.168.192.in-addr.arpa"
+      notify: "no"
+      allow_update_key: "DDNS_UPDATE"
+      ttl: "3600"
+      primary_ns_fqdn: "ns1.brightlight.localnet"
+      hostmaster: "root.localnet"
+      serial_num: "2020021901"
+      refresh: "3600"
+      retry: "60"
+      expire: "3600"
+      neg_cache_ttl: "7200"
+      records:
+        - name: "@"
+          ttl: ""
+          class: "IN"
+          type: "NS"
+          option: ""
+          rdata: "ns1.brightlight.localnet."
+        - name: "router-1"
+          ttl: ""
+          class: "IN"
+          type: "A"
+          option: ""
+          rdata: "192.168.40.1"
+    - comment: "Network administration subnet"
+      zone: "50.168.192.in-addr.arpa"
+      type: "master"
+      file: "db.50.168.192.in-addr.arpa"
+      notify: "no"
+      allow_update_key: "DDNS_UPDATE"
+      ttl: "3600"
+      primary_ns_fqdn: "ns1.brightlight.localnet"
+      hostmaster: "root.localnet"
+      serial_num: "2020021901"
+      refresh: "3600"
+      retry: "60"
+      expire: "3600"
+      neg_cache_ttl: "7200"
+      records:
+        - name: "@"
+          ttl: ""
+          class: "IN"
+          type: "NS"
+          option: ""
+          rdata: "ns1.brightlight.localnet."
+        - name: "router-1"
+          ttl: ""
+          class: "IN"
+          type: "A"
+          option: ""
+          rdata: "192.168.40.1"
+  dns_upstream_servers:
+    - "8.8.8.8"
+    - "8.8.4.4"
+    - "1.1.1.1"
+
+
+# "server/ntp" role variables
+  ntp_keys:
+    - comment: "Key 1"
+      number: "1"
+      type: "M"
+      value: "c13c2e6ebb710a23eb57c37df35e6a6c"
+  ntp_listen_interfaces:
+    - comment: "Do NOT listen on the wildcard address"
+      interface: "wildcard"
+      action: "ignore"
+    - comment: "Listen on the loopback interface"
+      interface: "lo"
+      action: "listen"
+    - comment: "Listen on the GUEST interface"
+      interface: "br_guest"
+      action: "listen"
+    - comment: "Listen on the IOT interface"
+      interface: "br_iot"
+      action: "listen"
+    - comment: "Listen on the WORK interface"
+      interface: "br_work"
+      action: "listen"
+    - comment: "Listen on the FAMILY interface"
+      interface: "br_family"
+      action: "listen"
+    - comment: "Listen on the ADMIN interface"
+      interface: "br_admin"
+      action: "listen"
+  ntp_peers:
+    - comment: ""
+      hostinfo: ""
+      options: ""
+  ntp_restrictions:
+    - comment: "By default, exchange time, but don't allow configuration"
+      hostinfo: "-4"
+      restrictions: "default kod notrap nomodify nopeer noquery limited"
+    - comment: "By default, exchange time, but don't allow configuration"
+      hostinfo: "-6"
+      restrictions: "default kod notrap nomodify nopeer noquery limited"
+    - comment: "Local users may interrogate the ntp server more closely"
+      hostinfo: "127.0.0.1"
+      restrictions: ""
+    - comment: "Local users may interrogate the ntp server more closely"
+      hostinfo: "::1"
+      restrictions: ""
+    - comment: "Needed for pool entries"
+      hostinfo: "source"
+      restrictions: "notrap nomodify noquery"
+  ntp_upstream_pools:
+    - comment: "Debian pool 0"
+      hostinfo: "0.debian.pool.ntp.org"
+      options: "iburst"
+    - comment: "Debian pool 1"
+      hostinfo: "1.debian.pool.ntp.org"
+      options: "iburst"
+    - comment: "Debian pool 2"
+      hostinfo: "2.debian.pool.ntp.org"
+      options: "iburst"
+    - comment: "Debian pool 3"
+      hostinfo: "3.debian.pool.ntp.org"
+      options: "iburst"
+  ntp_upstream_servers:
+    - comment: ""
+      hostinfo: ""
+      options: ""
+

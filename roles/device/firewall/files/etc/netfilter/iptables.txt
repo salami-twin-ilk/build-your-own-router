@@ -1,0 +1,474 @@
+#
+# ==========
+# Filter Rules
+# ==========
+#
+*filter
+:PORT_KNOCK              - [0:0]
+:PORT_KNOCK_RESET        - [0:0]
+:PORT_KNOCK_ALLOW        - [0:0]
+:LOG_ACCEPT              - [0:0]
+:LOG_DROP                - [0:0]
+:LOG_REJECT              - [0:0]
+:HOST_LOOP_RECV          - [0:0]
+:HOST_LOOP_SEND          - [0:0]
+:HOST_INT_RECV           - [0:0]
+:HOST_INT_SEND           - [0:0]
+:HOST_EXT_RECV           - [0:0]
+:HOST_EXT_SEND           - [0:0]
+:HOST_PUBLIC_RECV        - [0:0]
+:HOST_PUBLIC_SEND        - [0:0]
+:HOST_ENT_RECV           - [0:0]
+:HOST_ENT_SEND           - [0:0]
+:HOST_GUEST_RECV         - [0:0]
+:HOST_GUEST_SEND         - [0:0]
+:HOST_ANON_RECV          - [0:0]
+:HOST_ANON_SEND          - [0:0]
+:HOST_PRIVATE_RECV       - [0:0]
+:HOST_PRIVATE_SEND       - [0:0]
+:HOST_VPS_RECV           - [0:0]
+:HOST_VPS_SEND           - [0:0]
+:HOST_VPN_RECV           - [0:0]
+:HOST_VPN_SEND           - [0:0]
+:FWD_PUBLIC_EXT          - [0:0]
+:FWD_EXT_PUBLIC          - [0:0]
+:FWD_ENT_EXT             - [0:0]
+:FWD_EXT_ENT             - [0:0]
+:FWD_GUEST_EXT           - [0:0]
+:FWD_EXT_GUEST           - [0:0]
+:FWD_ANON_EXT            - [0:0]
+:FWD_EXT_ANON            - [0:0]
+:FWD_PRIVATE_EXT         - [0:0]
+:FWD_EXT_PRIVATE         - [0:0]
+:FWD_INT_EXT             - [0:0]
+:FWD_EXT_INT             - [0:0]
+:FWD_PRIVATE_INT         - [0:0]
+:FWD_INT_PRIVATE         - [0:0]
+:FWD_VPN_EXT             - [0:0]
+:FWD_EXT_VPN             - [0:0]
+:INPUT              DROP   [0:0]
+:FORWARD            DROP   [0:0]
+:OUTPUT             DROP   [0:0]
+#
+# ==========
+# Port knocking wherewithal
+# ==========
+#
+-A PORT_KNOCK -m state --state NEW --protocol tcp --dport 64000:64999 --jump PORT_KNOCK_RESET
+-A PORT_KNOCK -m state --state NEW --protocol tcp --dport 64322       --jump PORT_KNOCK_ALLOW
+-A PORT_KNOCK_RESET --jump LOG --log-prefix "PORT_KNOCK_RESET: "
+-A PORT_KNOCK_RESET -m recent --name port_knocked --remove --rsource
+-A PORT_KNOCK_ALLOW --jump LOG --log-prefix "PORT_KNOCK_ALLOW: "
+-A PORT_KNOCK_ALLOW -m recent --name port_knocked --set --rsource
+#
+# ==========
+# ACCEPT with LOGGING
+# ==========
+#
+-A LOG_ACCEPT --jump LOG    --log-prefix "ACCEPT: "
+-A LOG_ACCEPT --jump ACCEPT
+#
+# ==========
+# DROP with LOGGING
+# ==========
+#
+-A LOG_DROP --jump LOG  --log-prefix "DROP: "
+-A LOG_DROP --jump DROP
+#
+# ==========
+# REJECT with LOGGING
+# ==========
+#
+-A LOG_REJECT --jump LOG    --log-prefix "REJECT: "
+-A LOG_REJECT --jump REJECT
+#
+# ==========
+# Router Loopback
+# Strategy: Allow everything in and out
+# ==========
+#
+-A HOST_LOOP_RECV --jump ACCEPT
+-A HOST_LOOP_SEND --jump ACCEPT
+#
+# ==========
+# Router Ingress
+# Strategy: Allow little to come in to the router, regardless of source interface
+# ==========
+#
+-A HOST_INT_RECV -m state --state INVALID                                                                      --jump REJECT
+-A HOST_INT_RECV --protocol icmp                                                                               --jump ACCEPT
+-A HOST_INT_RECV -m state --state ESTABLISHED,RELATED                                                          --jump ACCEPT
+-A HOST_INT_RECV -m state --state NEW                            --protocol tcp                 --dport ssh    --jump ACCEPT
+-A HOST_INT_RECV -m state --state NEW                            --protocol tcp                 --dport domain --jump ACCEPT
+-A HOST_INT_RECV -m state --state NEW                            --protocol udp                 --dport domain --jump ACCEPT
+-A HOST_INT_RECV -m state --state NEW                            --protocol udp  --sport bootpc --dport bootps --jump ACCEPT
+-A HOST_INT_RECV -m state --state NEW                            --protocol udp                 --dport ntp    --jump ACCEPT
+-A HOST_INT_RECV                                                                                               --jump REJECT
+#
+-A HOST_EXT_RECV -m state --state INVALID                                                                                                                           --jump DROP
+-A HOST_EXT_RECV -m state --state ESTABLISHED,RELATED                                                                                                               --jump ACCEPT
+-A HOST_EXT_RECV -m state --state NEW                            --protocol udp  --sport bootps --dport bootpc                                                      --jump ACCEPT
+-A HOST_EXT_RECV -m state --state NEW                            --protocol tcp                 --dport ssh   -m recent --name port_knocked --seconds 3600 --update --jump ACCEPT
+-A HOST_EXT_RECV -m state --state NEW                            --protocol udp                 --dport 1195                                                        --jump ACCEPT
+-A HOST_EXT_RECV -m state --state NEW                            --protocol tcp                 --dport 1195  -m recent --name port_knocked --seconds 3600 --update --jump ACCEPT
+-A HOST_EXT_RECV                                                                                                                                                    --jump PORT_KNOCK
+-A HOST_EXT_RECV                                                                                                                                                    --jump DROP
+#
+-A HOST_PUBLIC_RECV -m state --state INVALID                                                                   --jump DROP
+-A HOST_PUBLIC_RECV -m state --state ESTABLISHED,RELATED                                                       --jump ACCEPT
+-A HOST_PUBLIC_RECV -m state --state NEW                         --protocol udp  --sport bootpc --dport bootps --jump ACCEPT
+-A HOST_PUBLIC_RECV                                                                                            --jump DROP
+#
+-A HOST_ENT_RECV -m state --state INVALID                                                                      --jump DROP
+-A HOST_ENT_RECV --protocol icmp                                                                               --jump ACCEPT
+-A HOST_ENT_RECV -m state --state ESTABLISHED,RELATED                                                          --jump ACCEPT
+-A HOST_ENT_RECV -m state --state NEW                            --protocol tcp                 --dport domain --jump ACCEPT
+-A HOST_ENT_RECV -m state --state NEW                            --protocol udp                 --dport domain --jump ACCEPT
+-A HOST_ENT_RECV -m state --state NEW                            --protocol udp  --sport bootpc --dport bootps --jump ACCEPT
+-A HOST_ENT_RECV                                                                                               --jump DROP
+#
+-A HOST_GUEST_RECV -m state --state INVALID                                                                    --jump REJECT
+-A HOST_GUEST_RECV -m state --state ESTABLISHED,RELATED                                                        --jump ACCEPT
+-A HOST_GUEST_RECV -m state --state NEW                          --protocol tcp                 --dport domain --jump ACCEPT
+-A HOST_GUEST_RECV -m state --state NEW                          --protocol udp                 --dport domain --jump ACCEPT
+-A HOST_GUEST_RECV -m state --state NEW                          --protocol udp  --sport bootpc --dport bootps --jump ACCEPT
+-A HOST_GUEST_RECV                                                                                             --jump REJECT
+#
+-A HOST_ANON_RECV -m state --state INVALID                                                                     --jump REJECT
+-A HOST_ANON_RECV -m state --state ESTABLISHED,RELATED                                                         --jump ACCEPT
+-A HOST_ANON_RECV -m state --state NEW                           --protocol tcp                 --dport 9054   --jump ACCEPT
+-A HOST_ANON_RECV -m state --state NEW                           --protocol udp  --sport bootpc --dport bootps --jump ACCEPT
+-A HOST_ANON_RECV -m state --state NEW                           --protocol udp                 --dport 9053   --jump ACCEPT
+-A HOST_ANON_RECV                                                                                              --jump REJECT
+#
+-A HOST_PRIVATE_RECV -m state --state INVALID                                                                  --jump REJECT
+-A HOST_PRIVATE_RECV                                             --protocol icmp                               --jump ACCEPT
+-A HOST_PRIVATE_RECV -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A HOST_PRIVATE_RECV -m state --state NEW                        --protocol tcp                 --dport ssh    --jump ACCEPT
+-A HOST_PRIVATE_RECV -m state --state NEW                        --protocol tcp                 --dport domain --jump ACCEPT
+-A HOST_PRIVATE_RECV -m state --state NEW                        --protocol udp                 --dport domain --jump ACCEPT
+-A HOST_PRIVATE_RECV -m state --state NEW                        --protocol udp  --sport bootpc --dport bootps --jump ACCEPT
+-A HOST_PRIVATE_RECV -m state --state NEW                        --protocol udp                 --dport ntp    --jump ACCEPT
+-A HOST_PRIVATE_RECV                                                                                           --jump REJECT
+#
+-A HOST_VPS_RECV     -m state --state INVALID                                                                  --jump LOG_REJECT
+-A HOST_VPS_RECV                                                 --protocol icmp                               --jump ACCEPT
+-A HOST_VPS_RECV     -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A HOST_VPS_RECV     -m state --state NEW                        --protocol tcp                 --dport ssh    --jump ACCEPT
+-A HOST_VPS_RECV                                                                                               --jump LOG_REJECT
+#
+-A HOST_VPN_RECV     -m state --state INVALID                                                                  --jump LOG_REJECT
+-A HOST_VPN_RECV                                                 --protocol icmp                               --jump ACCEPT
+-A HOST_VPN_RECV     -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A HOST_VPN_RECV     -m state --state NEW                        --protocol tcp                 --dport domain --jump ACCEPT
+-A HOST_VPN_RECV     -m state --state NEW                        --protocol udp                 --dport domain --jump ACCEPT
+-A HOST_VPN_RECV                                                                                               --jump LOG_REJECT
+#
+# ==========
+# Router Egress
+# Strategy: Allow the router to initiate little traffic, regardless of interface
+# ==========
+#
+-A HOST_INT_SEND     -m state --state INVALID                                                                  --jump REJECT
+-A HOST_INT_SEND                                                 --protocol icmp                               --jump ACCEPT
+-A HOST_INT_SEND     -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A HOST_INT_SEND     -m state --state NEW                        --protocol tcp                 --dport ssh    --jump ACCEPT
+-A HOST_INT_SEND     -m state --state NEW                        --protocol udp  --sport bootps --dport bootpc --jump ACCEPT
+-A HOST_INT_SEND     -m state --state NEW                        --protocol udp                 --dport ntp    --jump ACCEPT
+-A HOST_INT_SEND                                                                                               --jump REJECT
+#
+-A HOST_EXT_SEND     -m state --state INVALID                                                                  --jump REJECT
+-A HOST_EXT_SEND                                                 --protocol icmp                               --jump ACCEPT
+-A HOST_EXT_SEND     -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A HOST_EXT_SEND     -m state --state NEW                        --protocol tcp                 --dport domain --jump ACCEPT
+-A HOST_EXT_SEND     -m state --state NEW                        --protocol tcp                 --dport http   --jump ACCEPT
+-A HOST_EXT_SEND     -m state --state NEW                        --protocol tcp                 --dport https  --jump ACCEPT
+-A HOST_EXT_SEND     -m state --state NEW                        --protocol tcp                 --dport 2222   --jump ACCEPT
+-A HOST_EXT_SEND     -m state --state NEW                        --protocol tcp                 --dport 9001   --jump ACCEPT
+-A HOST_EXT_SEND     -m state --state NEW                        --protocol tcp                 --dport 9030   --jump ACCEPT
+-A HOST_EXT_SEND     -m state --state NEW                        --protocol udp                 --dport domain --jump ACCEPT
+-A HOST_EXT_SEND     -m state --state NEW                        --protocol udp  --sport bootpc --dport bootps --jump ACCEPT
+-A HOST_EXT_SEND     -m state --state NEW                        --protocol udp                 --dport ntp    --jump ACCEPT
+-A HOST_EXT_SEND     -m state --state NEW                        --protocol udp                 --dport 1194   --jump ACCEPT
+-A HOST_EXT_SEND                                                                                               --jump REJECT
+#
+-A HOST_PUBLIC_SEND  -m state --state INVALID                                                                  --jump REJECT
+-A HOST_PUBLIC_SEND  -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A HOST_PUBLIC_SEND  -m state --state NEW                        --protocol udp  --sport bootps --dport bootpc --jump ACCEPT
+-A HOST_PUBLIC_SEND                                                                                            --jump REJECT
+#
+-A HOST_ENT_SEND     -m state --state INVALID                                                                  --jump REJECT
+-A HOST_ENT_SEND     -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A HOST_ENT_SEND     -m state --state NEW                        --protocol udp  --sport bootps --dport bootpc --jump ACCEPT
+-A HOST_ENT_SEND                                                                                               --jump REJECT
+#
+-A HOST_GUEST_SEND   -m state --state INVALID                                                                  --jump REJECT
+-A HOST_GUEST_SEND   -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A HOST_GUEST_SEND   -m state --state NEW                        --protocol udp  --sport bootps --dport bootpc --jump ACCEPT
+-A HOST_GUEST_SEND                                                                                             --jump REJECT
+#
+-A HOST_ANON_SEND    -m state --state INVALID                                                                  --jump REJECT
+-A HOST_ANON_SEND    -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A HOST_ANON_SEND    -m state --state NEW                        --protocol tcp  --sport 9054                  --jump ACCEPT
+-A HOST_ANON_SEND    -m state --state NEW                        --protocol udp  --sport bootps --dport bootpc --jump ACCEPT
+-A HOST_ANON_SEND    -m state --state NEW                        --protocol udp  --sport 9053                  --jump ACCEPT
+-A HOST_ANON_SEND                                                                                              --jump REJECT
+#
+-A HOST_PRIVATE_SEND -m state --state INVALID                                                                  --jump REJECT
+-A HOST_PRIVATE_SEND                                             --protocol icmp                               --jump ACCEPT
+-A HOST_PRIVATE_SEND -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A HOST_PRIVATE_SEND -m state --state NEW                        --protocol udp  --sport bootps --dport bootpc --jump ACCEPT
+-A HOST_PRIVATE_SEND -m state --state NEW                        --protocol udp                 --dport ntp    --jump ACCEPT
+-A HOST_PRIVATE_SEND                                                                                           --jump REJECT
+#
+-A HOST_VPS_SEND     -m state --state INVALID                                                                  --jump REJECT
+-A HOST_VPS_SEND     -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A HOST_VPS_SEND                                                 --protocol icmp                               --jump ACCEPT
+-A HOST_VPS_SEND                                                                                               --jump REJECT
+#
+-A HOST_VPN_SEND     -m state --state INVALID                                                                  --jump REJECT
+-A HOST_VPN_SEND     -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A HOST_VPN_SEND                                                 --protocol icmp                               --jump ACCEPT
+-A HOST_VPN_SEND                                                                                               --jump REJECT
+#
+# ==========
+# Forward PUBLIC to EXT
+# ==========
+#                                       
+-A FWD_PUBLIC_EXT    -m state --state INVALID                                                                  --jump REJECT
+-A FWD_PUBLIC_EXT                                                --protocol icmp                               --jump ACCEPT
+-A FWD_PUBLIC_EXT    -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A FWD_PUBLIC_EXT    -m state --state NEW                                                                      --jump ACCEPT
+-A FWD_PUBLIC_EXT                                                                                              --jump REJECT
+#
+# ==========
+# Forward EXT to PUBLIC
+# ==========
+#
+-A FWD_EXT_PUBLIC    -m state --state INVALID                                                                  --jump DROP
+-A FWD_EXT_PUBLIC    -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A FWD_EXT_PUBLIC                                                                                              --jump DROP
+#
+# ==========
+# Forward PUBLIC to ENT
+# ==========
+#
+-A FWD_ENT_EXT       -m state --state INVALID                                                                  --jump REJECT
+-A FWD_ENT_EXT                                                   --protocol icmp                               --jump ACCEPT
+-A FWD_ENT_EXT       -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A FWD_ENT_EXT       -m state --state NEW                                                                      --jump ACCEPT
+-A FWD_ENT_EXT                                                                                                 --jump REJECT
+#
+# ==========
+# Forward EXT to ENT
+# ==========
+#
+-A FWD_EXT_ENT       -m state --state INVALID                                                                  --jump DROP
+-A FWD_EXT_ENT       -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A FWD_EXT_ENT                                                                                                 --jump DROP
+#
+# ==========
+# Forward GUEST to EXT
+# ==========
+#                                       
+-A FWD_GUEST_EXT     -m state --state INVALID                                                                  --jump REJECT
+-A FWD_GUEST_EXT                                                 --protocol icmp --jump ACCEPT
+-A FWD_GUEST_EXT     -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A FWD_GUEST_EXT     -m state --state NEW                                                                      --jump ACCEPT
+-A FWD_GUEST_EXT                                                                                               --jump REJECT
+#
+# ==========
+# Forward EXT to GUEST
+# ==========
+#
+-A FWD_EXT_GUEST     -m state --state INVALID                                                                  --jump DROP
+-A FWD_EXT_GUEST     -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A FWD_EXT_GUEST                                                                                               --jump DROP
+#
+# ==========
+# Forward ANON to EXT
+# ==========
+#                                       
+-A FWD_ANON_EXT                                                                                                --jump REJECT
+#
+# ==========
+# Forward EXT to ANON
+# ==========
+#
+-A FWD_EXT_ANON                                                                                                --jump DROP
+#
+# ==========
+# Forward PRIVATE to EXT
+# ==========
+#
+-A FWD_PRIVATE_EXT   -m state --state INVALID                                                                  --jump REJECT
+-A FWD_PRIVATE_EXT                                               --protocol icmp                               --jump ACCEPT
+-A FWD_PRIVATE_EXT   -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A FWD_PRIVATE_EXT   -m state --state NEW                                                                      --jump ACCEPT
+-A FWD_PRIVATE_EXT                                                                                             --jump REJECT
+#
+# ==========
+# Forward EXT to PRIVATE
+# ==========
+#
+-A FWD_EXT_PRIVATE   -m state --state INVALID                                                                  --jump DROP
+-A FWD_EXT_PRIVATE   -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A FWD_EXT_PRIVATE                                                                                             --jump DROP
+#
+# ==========
+# Forward INT to EXT
+# ==========
+#
+-A FWD_INT_EXT       -m state --state INVALID                                                                  --jump REJECT
+-A FWD_INT_EXT                                                   --protocol icmp                               --jump ACCEPT
+-A FWD_INT_EXT       -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A FWD_INT_EXT       -m state --state NEW                                                                      --jump ACCEPT
+-A FWD_INT_EXT                                                                                                 --jump REJECT
+#
+# ==========
+# Forward EXT to INT
+# ==========
+#
+-A FWD_EXT_INT       -m state --state INVALID                                                                  --jump DROP
+-A FWD_EXT_INT       -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A FWD_EXT_INT                                                                                                 --jump DROP
+#
+# ==========
+# Forward PRIVATE traffic to INT
+# ==========
+#
+-A FWD_PRIVATE_INT   -m state --state INVALID                                                                  --jump REJECT
+-A FWD_PRIVATE_INT                                               --protocol icmp                               --jump ACCEPT
+-A FWD_PRIVATE_INT   -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A FWD_PRIVATE_INT   -m state --state NEW                                                                      --jump ACCEPT
+-A FWD_PRIVATE_INT                                                                                             --jump REJECT
+#
+# ==========
+# Forward INT to PRIVATE
+# ==========
+#
+-A FWD_INT_PRIVATE   -m state --state INVALID                                                                  --jump REJECT
+-A FWD_INT_PRIVATE                                               --protocol icmp                               --jump ACCEPT
+-A FWD_INT_PRIVATE   -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A FWD_INT_PRIVATE   -m state --state NEW                                                                      --jump ACCEPT
+-A FWD_INT_PRIVATE                                                                                             --jump REJECT
+#
+# ==========
+# Forward VPN to EXT
+# ==========
+#
+-A FWD_VPN_EXT       -m state --state INVALID                                                                  --jump REJECT
+-A FWD_VPN_EXT                                                   --protocol icmp                               --jump ACCEPT
+-A FWD_VPN_EXT       -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A FWD_VPN_EXT       -m state --state NEW                                                                      --jump ACCEPT
+-A FWD_VPN_EXT                                                                                                 --jump REJECT
+#
+# ==========
+# Forward EXT to VPN
+# ==========
+#
+-A FWD_EXT_VPN       -m state --state INVALID                                                                  --jump DROP
+-A FWD_EXT_VPN       -m state --state ESTABLISHED,RELATED                                                      --jump ACCEPT
+-A FWD_EXT_VPN                                                                                                 --jump DROP
+#
+# ==========
+# Jumps based on INPUT interface
+# ==========
+#
+-A INPUT             -i lo                                                                                     --jump HOST_LOOP_RECV
+-A INPUT             -i int0                                                                                   --jump HOST_INT_RECV
+-A INPUT             -i ext0                                                                                   --jump HOST_EXT_RECV
+-A INPUT             -i wlan0_public                                                                           --jump HOST_PUBLIC_RECV
+-A INPUT             -i entbr                                                                                  --jump HOST_ENT_RECV
+-A INPUT             -i wlan0_guest                                                                            --jump HOST_GUEST_RECV
+-A INPUT             -i wlan0_anon                                                                             --jump HOST_ANON_RECV
+-A INPUT             -i wlan0_private                                                                          --jump HOST_PRIVATE_RECV
+-A INPUT             -i tun0                 -d 10.254.254.10/32     -s 10.254.254.1/32                        --jump HOST_VPS_RECV
+-A INPUT             -i tun1                 -d 10.254.200.0/24      -s 10.254.200.0/24                        --jump HOST_VPN_RECV
+-A INPUT                                                                                                       --jump DROP
+#
+# ==========
+# Jumps based on OUTPUT interface
+# ==========
+#
+-A OUTPUT             -o lo                                                                                    --jump HOST_LOOP_SEND
+-A OUTPUT             -o int0                                                                                  --jump HOST_INT_SEND
+-A OUTPUT             -o ext0                                                                                  --jump HOST_EXT_SEND
+-A OUTPUT             -o wlan0_public                                                                          --jump HOST_PUBLIC_SEND
+-A OUTPUT             -o entbr                                                                                 --jump HOST_ENT_SEND
+-A OUTPUT             -o wlan0_guest                                                                           --jump HOST_GUEST_SEND
+-A OUTPUT             -o wlan0_anon                                                                            --jump HOST_ANON_SEND
+-A OUTPUT             -o wlan0_private                                                                         --jump HOST_PRIVATE_SEND
+-A OUTPUT             -o tun0                -s 10.254.254.10/32     -d 10.254.254.1/32                        --jump HOST_VPS_SEND
+-A OUTPUT             -o tun1                -s 10.254.200.0/24      -d 10.254.200.0/24                        --jump HOST_VPN_SEND
+-A OUTPUT                                                                                                      --jump DROP
+#
+# ==========
+# Jumps based on FORWARD between interfaces and sources/destinations
+# ==========
+#
+-A FORWARD           -i wlan0_public         -o ext0                 -s 10.0.0.0/24                            --jump FWD_PUBLIC_EXT
+-A FORWARD           -i ext0                 -o wlan0_public         -d 10.0.0.0/24                            --jump FWD_EXT_PUBLIC
+-A FORWARD           -i entbr                -o ext0                 -s 10.10.0.0/24                           --jump FWD_ENT_EXT
+-A FORWARD           -i ext0                 -o entbr                -d 10.10.0.0/24                           --jump FWD_EXT_ENT
+-A FORWARD           -i wlan0_guest          -o ext0                 -s 10.20.0.0/24                           --jump FWD_GUEST_EXT
+-A FORWARD           -i ext0                 -o wlan0_guest          -d 10.20.0.0/24                           --jump FWD_EXT_GUEST
+-A FORWARD           -i wlan0_anon           -o ext0                 -s 10.30.0.0/24                           --jump FWD_ANON_EXT
+-A FORWARD           -i ext0                 -o wlan0_anon           -d 10.30.0.0/24                           --jump FWD_EXT_ANON
+-A FORWARD           -i wlan0_private        -o ext0                 -s 10.40.0.0/24                           --jump FWD_PRIVATE_EXT
+-A FORWARD           -i ext0                 -o wlan0_private        -d 10.40.0.0/24                           --jump FWD_EXT_PRIVATE
+-A FORWARD           -i wlan0_private        -o int0                 -s 10.40.0.0/24                           --jump FWD_PRIVATE_INT
+-A FORWARD           -i int0                 -o wlan0_private        -d 10.40.0.0/24                           --jump FWD_INT_PRIVATE
+-A FORWARD           -i int0                 -o ext0                 -s 172.20.0.0/24                          --jump FWD_INT_EXT
+-A FORWARD           -i ext0                 -o int0                 -d 172.20.0.0/24                          --jump FWD_EXT_INT
+-A FORWARD           -i entbr                -o entbr                                                          --jump ACCEPT
+-A FORWARD           -i tun0                                                                                   --jump REJECT
+-A FORWARD                                   -o tun0                                                           --jump REJECT
+-A FORWARD           -i tun1                 -o ext0                 -s 10.254.200.0/24                        --jump FWD_VPN_EXT
+-A FORWARD           -i ext0                 -o tun1                 -d 10.254.200.0/24                        --jump FWD_EXT_VPN
+-A FORWARD                                                                                                     --jump DROP
+#
+# ==========
+# Commit FILTER rules
+# ==========
+#
+COMMIT
+#
+#
+# 
+# ==========
+# NAT Rules
+# Strategy: Transparently proxy "wlan0_anon" traffic through Tor, and masquerade all other traffic leaving the router.
+# ==========
+#
+*nat
+:PREROUTING          ACCEPT  [0:0]
+:INPUT               ACCEPT  [0:0]
+:OUTPUT              ACCEPT  [0:0]
+:POSTROUTING         ACCEPT  [0:0]
+#
+-A PREROUTING        --jump REDIRECT  -i wlan0_anon  -s 10.30.0.0/24 -p udp --dport 53 --to-ports 9053
+-A PREROUTING        --jump REDIRECT  -i wlan0_anon  -s 10.30.0.0/24 -p tcp --syn      --to-ports 9054
+-A POSTROUTING       -o ext0                                                                                   --jump MASQUERADE
+#
+# ==========
+# MANGLE Rules
+# ==========
+#
+#*mangle
+#:PREROUTING         ACCEPT [0:0]
+#:FORWARD            ACCEPT [0:0]
+#:OUTPUT             ACCEPT [0:0]
+#:POSTROUTING        ACCEPT [0:0]
+#
+#-A POSTROUTING      -o int0                                 -p udp -m udp --dport bootpc                      --jump CHECKSUM --checksum-fill
+#-A POSTROUTING      -o wlan0_private                        -p udp -m udp --dport bootpc                      --jump CHECKSUM --checksum-fill
+#-A POSTROUTING      -o wlan0_anon                           -p udp -m udp --dport bootpc                      --jump CHECKSUM --checksum-fill
+#-A POSTROUTING      -o wlan0_guest                          -p udp -m udp --dport bootpc                      --jump CHECKSUM --checksum-fill
+#-A POSTROUTING      -o wlan0_public                         -p udp -m udp --dport bootpc                      --jump CHECKSUM --checksum-fill
+#
+# ==========
+# COMMIT!
+# ==========
+#
+COMMIT

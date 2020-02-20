@@ -1,0 +1,12 @@
+
+  apt_packages_add:
+    - "ntp"
+  apt_packages_remove:
+
+  services_disable:
+  services_enable:
+    - "ntp"
+  services_restart:
+    - "ntp"
+  services_stop:
+

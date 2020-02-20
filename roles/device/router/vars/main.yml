@@ -1,0 +1,9 @@
+
+  apt_packages_add:
+    - "bridge-utils"
+    - "iptables"
+  apt_packages_remove:
+
+  services_enable:
+  service_restart:
+

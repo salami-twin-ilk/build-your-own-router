@@ -1,0 +1,6 @@
+# {{ item.comment }}
+allow-hotplug {{ item.physical_interface_name }}
+iface {{ item.physical_interface_name }} inet manual
+   pre-up  ip link set $IFACE address {{ item.bssid }}
+iface {{ item.physical_interface_name }} inet6 manual
+

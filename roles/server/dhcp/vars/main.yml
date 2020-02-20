@@ -1,0 +1,12 @@
+
+  apt_packages_add:
+    - "isc-dhcp-server"
+  apt_packages_remove:
+
+  services_disable:
+  services_enable:
+    - "isc-dhcp-server"
+  services_restart:
+    - "isc-dhcp-server"
+  services_stop:
+

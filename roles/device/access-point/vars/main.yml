@@ -1,0 +1,14 @@
+
+  apt_packages_add:
+    - "crda"
+    - "firmware-atheros"
+    - "hostapd"
+  apt_packages_remove:
+
+  services_disable:
+    - "hostapd"
+  services_enable:
+  services_restart:
+  services_stop:
+    - "hostapd"
+

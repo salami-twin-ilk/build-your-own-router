@@ -1,0 +1,50 @@
+
+- name: "Install additional packages"
+  apt:
+    name: "{{ apt_packages_add }}"
+    state: present
+
+- name: "Remove unneeded packages"
+  apt:
+    name: "{{ apt_packages_remove }}"
+    state: absent
+    purge: yes
+
+- name: "Install templated /etc/default/isc-dhcp-server"
+  template:
+    src: "etc/default/isc-dhcp-server.jinja2"
+    dest: "/etc/default/isc-dhcp-server"
+    owner: root
+    group: root
+    mode: 0644
+    backup: no
+
+- name: "Install templated /etc/dhcp/dhcpd.conf"
+  template:
+    src: "etc/dhcp/dhcpd.conf.jinja2"
+    dest: "/etc/dhcp/dhcpd.conf"
+    owner: root
+    group: root
+    mode: 0644
+    backup: no
+
+- name: "Install templated /etc/dhcp/ddns.key"
+  template:
+    src: "etc/dhcp/ddns.key.jinja2"
+    dest: "/etc/dhcp/ddns.key"
+    owner: root
+    group: root
+    mode: 0640
+
+- name: "Restart necessary services"
+  systemd:
+    state: restarted
+    name: "{{ item }}"
+  with_items: "{{ services_restart }}"
+
+- name: "Enable necessary services"
+  systemd:
+    enabled: yes
+    name: "{{ item }}"
+  with_items: "{{ services_enable }}"
+

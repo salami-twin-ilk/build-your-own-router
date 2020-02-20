@@ -1,0 +1,18 @@
+$TTL {{ item.ttl }}
+{{ item.zone }}.	IN	SOA	{{ item.primary_ns_fqdn }}.	{{ item.hostmaster }}. (
+	{{ item.serial_num }}	; Serial Number
+	{{ item.refresh }}		; Refresh
+	{{ item.retry }}		; Retry
+	{{ item.expire }}		; Expiry
+	{{ item.neg_cache_ttl }}		; Negative Cache TTL
+)
+
+		IN	NS		{{ item.primary_ns_fqdn }}.
+
+$ORIGIN {{ item.zone }}.
+$TTL {{ item.ttl }}
+
+{% for r in item.records %}
+{{ r.name }}	{{ r.ttl }}	{{ r.class }}	{{ r.type }}	{{ r.option }}	{{ r.rdata }}
+{% endfor %}
+

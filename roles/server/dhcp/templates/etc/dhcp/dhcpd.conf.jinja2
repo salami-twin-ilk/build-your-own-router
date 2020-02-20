@@ -1,0 +1,87 @@
+
+option domain-name-servers {{ dhcp_dns_servers|join(' ') }};
+
+default-lease-time {{ dhcp_default_lease_time }};
+max-lease-time {{ dhcp_max_lease_time }};
+
+{% if dhcp_authoritative %}
+authoritative;
+{% endif %}
+
+log-facility {{ dhcp_log_facility }};
+
+{% if dhcp_ddns_updates %}
+ddns-updates on;
+ddns-update-style {{ dhcp_ddns_update_style }};
+{% else %}
+ddns-updates off;
+{% endif %}
+{% if dhcp_update_static_leases %}
+update-static-leases on;
+{% else %}
+update-static-leases off;
+{% endif %}
+
+ignore {{ dhcp_ignore }};
+
+
+{% if dhcp_includes is not none and dhcp_includes|length > 0 %}
+{% for i in dhcp_includes %}
+include "{{ i }}";
+{% endfor %}
+{% endif %}
+
+
+{% if dhcp_extra_options is not none and dhcp_extra_options|length > 0 %}
+{% for eo in dhcp_extra_options %}
+option {{ eo }};
+{% endfor %}
+{% endif %}
+
+
+{% if dhcp_extra_options is not none and dhcp_extra_options|length > 0 %}
+{% for c in dhcp_classes %}
+class "{{ c.name }}" {
+{% for l in c.content %}
+   {{ l }};
+{% endfor %}
+}
+
+{% endfor %}
+{% endif %}
+
+
+{% for s in dhcp_subnets %}
+# {{ s.comment }}
+subnet {{ s.ipv4_subnet }} netmask {{ s.ipv4_netmask }} {
+   range {{ s.ipv4_address_range }};
+{% for ocv in s.option_code_values %}
+   option {{ ocv.option_code }} {{ ocv.value }};
+{% endfor %}
+}
+
+{% endfor %}
+
+
+{% for sl in dhcp_static_leases %}
+# {{ sl.comment }}
+host {{ sl.hostname }} {
+   hardware ethernet {{ sl.mac_address }};
+   fixed-address {{ sl.ipv4_address }};
+}
+
+{% endfor %}
+
+
+{% for z in dhcp_zones %}
+# {{ z.comment }}
+zone {{ z.name }} {
+   primary {{ z.primary_ipv4 }};
+   primary6 {{ z.primary_ipv6 }};
+#   secondary {{ z.secondary_ipv4 }};
+#   secondary6 {{ z.secondary_ipv6 }};
+   key {{ z.key }};
+}
+
+{% endfor %}
+

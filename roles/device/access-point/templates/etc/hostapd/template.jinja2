@@ -1,0 +1,37 @@
+# {{ item.comment }}
+
+# Physical interface settings
+interface={{ item.physical_interface_name }}
+bssid={{ item.bssid }}
+driver={{ item.driver }}
+country_code={{ item.country }}
+hw_mode={{ item.hw_mode }}
+wmm_enabled={{ item.wmm_enable }}
+ieee80211d={{ item.ieee80211d }}
+ieee80211h={{ item.ieee80211h }}
+ieee80211n={{ item.ieee80211n }}
+wps_state={{ item.wps_state }}
+ht_capab={{ item.ht_capab }}
+channel={{ item.channel }}
+
+# First wireless network settings
+# {{ item.first_wireless_network[0].comment }}
+ssid={{ item.first_wireless_network[0].ssid }}
+wpa={{ item.first_wireless_network[0].wpa }}
+wpa_passphrase={{ item.first_wireless_network[0].wpa_passphrase }}
+wpa_key_mgmt={{ item.first_wireless_network[0].wpa_key_mgmt }}
+rsn_pairwise={{ item.first_wireless_network[0].rsn_pairwise }}
+bridge={{ item.first_wireless_network[0].bridge }}
+
+# Other wireless network settings
+{% for own in item.other_wireless_networks %}
+# {{ own.comment }}
+bss={{ own.bss }}
+ssid={{ own.ssid }}
+wpa={{ own.wpa }}
+wpa_passphrase={{ own.wpa_passphrase }}
+wpa_key_mgmt={{ own.wpa_key_mgmt }}
+rsn_pairwise={{ own.rsn_pairwise }}
+bridge={{ own.bridge }}
+
+{% endfor %}

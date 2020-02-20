@@ -1,0 +1,5 @@
+{% for as in apt_sources %}
+# {{ as.comment }}
+{{ as.type }} {{ as.uri }} {{ as.suite }} {{ as.components }}
+
+{% endfor %}

@@ -1,0 +1,77 @@
+
+- name: "Install additional packages"
+  apt:
+    name: "{{ apt_packages_add }}"
+    state: present
+
+- name: "Remove unneeded packages"
+  apt:
+    name: "{{ apt_packages_remove }}"
+    state: absent
+    purge: yes
+
+- name: "Install templated /etc/default/crda"
+  template:
+    src: "etc/default/crda.jinja2"
+    dest: "/etc/default/crda"
+    owner: root
+    group: root
+    mode: 0644
+    backup: no
+
+- name: "Install templated config files for physical wireless interfaces"
+  template:
+    src: "etc/network/interfaces.d/template.jinja2"
+    dest: "/etc/network/interfaces.d/20-{{ item.physical_interface_name }}"
+    owner: root
+    group: root
+    mode: 0644
+    backup: no
+  with_items: "{{ wireless_configuration }}"
+
+- name: "Bring down physical wireless interfaces"
+  command: "ifdown {{ item.physical_interface_name }}"
+  with_items: "{{ wireless_configuration }}"
+
+#- name: "Bring up physical wireless interfaces"
+#  command: "ifup {{ item.physical_interface_name }}"
+#  with_items: "{{ wireless_configuration }}"
+
+- name: "Copy /etc/default/hostapd"
+  copy:
+    src: "etc/default/hostapd"
+    dest: "/etc/default/hostapd"
+    owner: root
+    group: root
+    mode: 0644
+    backup: no
+
+- name: "Install templated /etc/hostapd/<PHY_IFACE_NAME>.conf files"
+  template:
+    src: "etc/hostapd/template.jinja2"
+    dest: "/etc/hostapd/{{ item.physical_interface_name }}.conf"
+    owner: root
+    group: root
+    mode: 0644
+    backup: no
+  with_items: "{{ wireless_configuration }}"
+
+- name: "Disable unneeded services"
+  systemd:
+    enabled: no
+    name: "{{ item }}"
+  with_items: "{{ services_disable }}"
+
+- name: "Stop unneeded services"
+  systemd:
+    state: stopped
+    name: "{{ item }}"
+  with_items: "{{ services_stop }}"
+
+- name: "Enable and start interface-specific hostapd services"
+  systemd:
+    enabled: yes
+    state: restarted
+    name: "hostapd@{{ item.physical_interface_name }}"
+  with_items: "{{ wireless_configuration }}"
+

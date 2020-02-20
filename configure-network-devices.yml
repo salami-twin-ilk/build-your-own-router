@@ -6,9 +6,6 @@
   connection: local
   gather_facts: false
 
-  vars:
-    test_var: "test"
-
   tasks:
     - import_role:
         name: common
@@ -22,15 +19,15 @@
     - import_role:
         name: device/firewall
 
-#    - import_role:
-#        name: server/dhcp
-#
-#    - import_role:
-#        name: server/dns
-#
-#    - import_role:
-#        name: server/ntp
-#
+    - import_role:
+        name: server/dhcp
+
+    - import_role:
+        name: server/dns
+
+    - import_role:
+        name: server/ntp
+
 #    - import_role:
 #        name: server/vpn
 

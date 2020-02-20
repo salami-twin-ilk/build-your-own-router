@@ -1,0 +1,15 @@
+
+  apt_packages_add:
+#    - "debian-goodies"		TODO: Caused 3k+ package dependencies
+    - "deborphan"
+    - "dnsutils"
+    - "sudo"
+    - "tmux"
+    - "tree"
+  apt_packages_remove:
+
+  services_enable:
+    - "ssh"
+  services_restart:
+    - "ssh"
+

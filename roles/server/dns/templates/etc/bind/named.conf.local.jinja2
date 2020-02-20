@@ -1,0 +1,32 @@
+//
+// Do any local configuration here
+//
+
+// Consider adding the 1918 zones here, if they are not used in your
+// organization
+//include "/etc/bind/zones.rfc1918";
+include "/etc/bind/ddns.key";
+
+{% for dfz in dns_forward_zones %}
+# {{ dfz.comment }}
+zone "{{ dfz.zone }}" {
+   type {{ dfz.type }};
+   file "{{ dfz.file }}";
+   notify {{ dfz.notify }};
+   allow-update { key {{ dfz.allow_update_key }}; };
+};
+
+{% endfor %}
+
+
+{% for drz in dns_reverse_zones %}
+# {{ drz.comment }}
+   zone "{{ drz.zone }}" {
+   type {{ drz.type }};
+   file "{{ drz.file }}";
+   notify {{ drz.notify }};
+   allow-update { key {{ drz.allow_update_key }}; };
+};
+
+{% endfor %}
+

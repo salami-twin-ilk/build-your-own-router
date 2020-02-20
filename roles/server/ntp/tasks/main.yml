@@ -1,0 +1,48 @@
+
+- name: "Install additional packages"
+  apt:
+    name: "{{ apt_packages_add }}"
+    state: present
+
+- name: "Remove unneeded packages"
+  apt:
+    name: "{{ apt_packages_remove }}"
+    state: absent
+    purge: yes
+
+- name: "Copy /etc/defaults/ntp"
+  copy:
+    src: "etc/default/ntp"
+    dest: "/etc/default/ntp"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: "Install templated /etc/ntp.conf"
+  template:
+    src: "etc/ntp.conf.jinja2"
+    dest: "/etc/ntp.conf"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: "Install templated /etc/ntp.keys"
+  template:
+    src: "etc/ntp.keys.jinja2"
+    dest: "/etc/ntp.keys"
+    owner: root
+    group: root
+    mode: 0600
+
+- name: "Restart necessary services"
+  systemd:
+    state: restarted
+    name: "{{ item }}"
+  with_items: "{{ services_restart }}"
+
+- name: "Enable necessary services"
+  systemd:
+    enabled: yes
+    name: "{{ item }}"
+  with_items: "{{ services_enable }}"
+

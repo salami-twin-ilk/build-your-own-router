@@ -1,0 +1,449 @@
+
+- name: "Install additional packages"
+  apt:
+    name: "{{ apt_packages_add }}"
+    state: present
+
+- name: "Remove unneeded packages"
+  apt:
+    name: "{{ apt_packages_remove }}"
+    state: absent
+    purge: yes
+
+
+# =============================================================================
+#                                     IPv4
+# =============================================================================
+
+# -------------------------------------
+# Flush any in-memory rules and delete user-defined chains
+# -------------------------------------
+- name: "IPv4: Flush all in-memory iptables rules"
+  iptables:
+    ip_version: "ipv4"
+    table: "{{ item }}"
+    flush: yes
+  with_items: ['filter', 'mangle', 'nat', 'raw', 'security']
+
+- name: "IPv4: Delete user-defined chains"
+  shell:
+    iptables -t {{ item }} -X
+  with_items: ['filter', 'mangle', 'nat', 'raw', 'security']
+
+# -------------------------------------
+# Create user-defined chains in all tables
+# -------------------------------------
+- name: "IPv4: Create user-defined chains for the filter table"
+  shell:
+    iptables -t filter -N {{ item.chain }}
+  when: item.chain is defined
+  with_items: "{{ firewall_user_defined_chain_declarations.ipv4.filter }}"
+
+- name: "IPv4: Create user-defined chains for the mangle table"
+  shell:
+    iptables -t mangle -N {{ item.chain }}
+  when: item.chain is defined
+  with_items: "{{ firewall_user_defined_chain_declarations.ipv4.mangle }}"
+
+- name: "IPv4: Create user-defined chains for the nat table"
+  shell:
+    iptables -t nat -N {{ item.chain }}
+  when: item.chain is defined
+  with_items: "{{ firewall_user_defined_chain_declarations.ipv4.nat }}"
+
+- name: "IPv4: Create user-defined chains for the raw table"
+  shell:
+    iptables -t raw -N {{ item.chain }}
+  when: item.chain is defined
+  with_items: "{{ firewall_user_defined_chain_declarations.ipv4.raw }}"
+
+- name: "IPv4: Create user-defined chains for the security table"
+  shell:
+    iptables -t security -N {{ item.chain }}
+  when: item.chain is defined
+  with_items: "{{ firewall_user_defined_chain_declarations.ipv4.security }}"
+
+# -------------------------------------
+# Insert firewall rules
+# -------------------------------------
+- name: "Family: IPv4, Table: filter, Chain: INPUT"
+  iptables:
+    action: "{{ item.action|default (omit) }}"
+    chain: INPUT
+    comment: "{{ item.comment|default (omit) }}"
+    ctstate: "{{ item.ctstate|default (omit) }}"
+    destination: "{{ item.destination|default (omit) }}"
+    destination_port: "{{ item.destination_port|default (omit) }}"
+    dst_range: "{{ item.dst_range|default (omit) }}"
+    flush: "{{ item.flush|default (omit) }}"
+    fragment: "{{ item.fragment|default (omit) }}"
+    gateway: "{{ item.gateway|default (omit) }}"
+    gid_owner: "{{ item.gid_owner|default (omit) }}"
+    goto: "{{ item.goto|default (omit) }}"
+    icmp_type: "{{ item.icmp_type|default (omit) }}"
+    in_interface: "{{ item.in_interface|default (omit) }}"
+    ip_version: ipv4
+    jump: "{{ item.jump|default (omit) }}"
+    limit: "{{ item.limit|default (omit) }}"
+    limit_burst: "{{ item.limit_burst|default (omit) }}"
+    log_level: "{{ item.log_level|default (omit) }}"
+    log_prefix: "{{ item.log_prefix|default (omit) }}"
+    match: "{{ item.match|default (omit) }}"
+    out_interface: "{{ item.out_interface|default (omit) }}"
+    policy: "{{ item.policy|default (omit) }}"
+    protocol: "{{ item.protocol|default (omit) }}"
+    reject_with: "{{ item.reject_with|default (omit) }}"
+    rule_num: "{{ item.rule_num|default (omit) }}"
+    set_counters: "{{ item.set_counters|default (omit) }}"
+    set_dscp_mark: "{{ item.set_dscp_mark|default (omit) }}"
+    set_dscp_mark_class: "{{ item.set_dscp_mark_class|default (omit) }}"
+    source: "{{ item.source|default (omit) }}"
+    source_port: "{{ item.source_port|default (omit) }}"
+    src_range: "{{ item.src_range|default (omit) }}"
+    state: "{{ item.state|default (omit) }}"
+    syn: "{{ item.syn|default (omit) }}"
+    table: filter
+    tcp_flags: "{{ item.tcp_flags|default (omit) }}"
+    to_destination: "{{ item.to_destination|default (omit) }}"
+    to_ports: "{{ item.to_ports|default (omit) }}"
+    to_source: "{{ item.to_source|default (omit) }}"
+    uid_owner: "{{ item.uid_owner|default (omit) }}"
+  with_items: "{{ firewall_rules.ipv4.filter.INPUT }}"
+
+- name: "Family: IPv4, Table: filter, Chain: FORWARD"
+  iptables:
+    action: "{{ item.action|default (omit) }}"
+    chain: FORWARD
+    comment: "{{ item.comment|default (omit) }}"
+    ctstate: "{{ item.ctstate|default (omit) }}"
+    destination: "{{ item.destination|default (omit) }}"
+    destination_port: "{{ item.destination_port|default (omit) }}"
+    dst_range: "{{ item.dst_range|default (omit) }}"
+    flush: "{{ item.flush|default (omit) }}"
+    fragment: "{{ item.fragment|default (omit) }}"
+    gateway: "{{ item.gateway|default (omit) }}"
+    gid_owner: "{{ item.gid_owner|default (omit) }}"
+    goto: "{{ item.goto|default (omit) }}"
+    icmp_type: "{{ item.icmp_type|default (omit) }}"
+    in_interface: "{{ item.in_interface|default (omit) }}"
+    ip_version: ipv4
+    jump: "{{ item.jump|default (omit) }}"
+    limit: "{{ item.limit|default (omit) }}"
+    limit_burst: "{{ item.limit_burst|default (omit) }}"
+    log_level: "{{ item.log_level|default (omit) }}"
+    log_prefix: "{{ item.log_prefix|default (omit) }}"
+    match: "{{ item.match|default (omit) }}"
+    out_interface: "{{ item.out_interface|default (omit) }}"
+    policy: "{{ item.policy|default (omit) }}"
+    protocol: "{{ item.protocol|default (omit) }}"
+    reject_with: "{{ item.reject_with|default (omit) }}"
+    rule_num: "{{ item.rule_num|default (omit) }}"
+    set_counters: "{{ item.set_counters|default (omit) }}"
+    set_dscp_mark: "{{ item.set_dscp_mark|default (omit) }}"
+    set_dscp_mark_class: "{{ item.set_dscp_mark_class|default (omit) }}"
+    source: "{{ item.source|default (omit) }}"
+    source_port: "{{ item.source_port|default (omit) }}"
+    src_range: "{{ item.src_range|default (omit) }}"
+    state: "{{ item.state|default (omit) }}"
+    syn: "{{ item.syn|default (omit) }}"
+    table: filter
+    tcp_flags: "{{ item.tcp_flags|default (omit) }}"
+    to_destination: "{{ item.to_destination|default (omit) }}"
+    to_ports: "{{ item.to_ports|default (omit) }}"
+    to_source: "{{ item.to_source|default (omit) }}"
+    uid_owner: "{{ item.uid_owner|default (omit) }}"
+  with_items: "{{ firewall_rules.ipv4.filter.FORWARD }}"
+
+- name: "Family: IPv4, Table: filter, Chain: OUTPUT"
+  iptables:
+    action: "{{ item.action|default (omit) }}"
+    chain: OUTPUT
+    comment: "{{ item.comment|default (omit) }}"
+    ctstate: "{{ item.ctstate|default (omit) }}"
+    destination: "{{ item.destination|default (omit) }}"
+    destination_port: "{{ item.destination_port|default (omit) }}"
+    dst_range: "{{ item.dst_range|default (omit) }}"
+    flush: "{{ item.flush|default (omit) }}"
+    fragment: "{{ item.fragment|default (omit) }}"
+    gateway: "{{ item.gateway|default (omit) }}"
+    gid_owner: "{{ item.gid_owner|default (omit) }}"
+    goto: "{{ item.goto|default (omit) }}"
+    icmp_type: "{{ item.icmp_type|default (omit) }}"
+    in_interface: "{{ item.in_interface|default (omit) }}"
+    ip_version: ipv4
+    jump: "{{ item.jump|default (omit) }}"
+    limit: "{{ item.limit|default (omit) }}"
+    limit_burst: "{{ item.limit_burst|default (omit) }}"
+    log_level: "{{ item.log_level|default (omit) }}"
+    log_prefix: "{{ item.log_prefix|default (omit) }}"
+    match: "{{ item.match|default (omit) }}"
+    out_interface: "{{ item.out_interface|default (omit) }}"
+    policy: "{{ item.policy|default (omit) }}"
+    protocol: "{{ item.protocol|default (omit) }}"
+    reject_with: "{{ item.reject_with|default (omit) }}"
+    rule_num: "{{ item.rule_num|default (omit) }}"
+    set_counters: "{{ item.set_counters|default (omit) }}"
+    set_dscp_mark: "{{ item.set_dscp_mark|default (omit) }}"
+    set_dscp_mark_class: "{{ item.set_dscp_mark_class|default (omit) }}"
+    source: "{{ item.source|default (omit) }}"
+    source_port: "{{ item.source_port|default (omit) }}"
+    src_range: "{{ item.src_range|default (omit) }}"
+    state: "{{ item.state|default (omit) }}"
+    syn: "{{ item.syn|default (omit) }}"
+    table: filter
+    tcp_flags: "{{ item.tcp_flags|default (omit) }}"
+    to_destination: "{{ item.to_destination|default (omit) }}"
+    to_ports: "{{ item.to_ports|default (omit) }}"
+    to_source: "{{ item.to_source|default (omit) }}"
+    uid_owner: "{{ item.uid_owner|default (omit) }}"
+  with_items: "{{ firewall_rules.ipv4.filter.OUTPUT }}"
+
+- name: "Family: IPv4, Table: filter, Chains: user-defined"
+  iptables:
+    action: "{{ item.action|default (omit) }}"
+    chain: "{{ item.chain|default (omit) }}"
+    comment: "{{ item.comment|default (omit) }}"
+    ctstate: "{{ item.ctstate|default (omit) }}"
+    destination: "{{ item.destination|default (omit) }}"
+    destination_port: "{{ item.destination_port|default (omit) }}"
+    dst_range: "{{ item.dst_range|default (omit) }}"
+    flush: "{{ item.flush|default (omit) }}"
+    fragment: "{{ item.fragment|default (omit) }}"
+    gateway: "{{ item.gateway|default (omit) }}"
+    gid_owner: "{{ item.gid_owner|default (omit) }}"
+    goto: "{{ item.goto|default (omit) }}"
+    icmp_type: "{{ item.icmp_type|default (omit) }}"
+    in_interface: "{{ item.in_interface|default (omit) }}"
+    ip_version: ipv4
+    jump: "{{ item.jump|default (omit) }}"
+    limit: "{{ item.limit|default (omit) }}"
+    limit_burst: "{{ item.limit_burst|default (omit) }}"
+    log_level: "{{ item.log_level|default (omit) }}"
+    log_prefix: "{{ item.log_prefix|default (omit) }}"
+    match: "{{ item.match|default (omit) }}"
+    out_interface: "{{ item.out_interface|default (omit) }}"
+    policy: "{{ item.policy|default (omit) }}"
+    protocol: "{{ item.protocol|default (omit) }}"
+    reject_with: "{{ item.reject_with|default (omit) }}"
+    rule_num: "{{ item.rule_num|default (omit) }}"
+    set_counters: "{{ item.set_counters|default (omit) }}"
+    set_dscp_mark: "{{ item.set_dscp_mark|default (omit) }}"
+    set_dscp_mark_class: "{{ item.set_dscp_mark_class|default (omit) }}"
+    source: "{{ item.source|default (omit) }}"
+    source_port: "{{ item.source_port|default (omit) }}"
+    src_range: "{{ item.src_range|default (omit) }}"
+    state: "{{ item.state|default (omit) }}"
+    syn: "{{ item.syn|default (omit) }}"
+    table: filter
+    tcp_flags: "{{ item.tcp_flags|default (omit) }}"
+    to_destination: "{{ item.to_destination|default (omit) }}"
+    to_ports: "{{ item.to_ports|default (omit) }}"
+    to_source: "{{ item.to_source|default (omit) }}"
+    uid_owner: "{{ item.uid_owner|default (omit) }}"
+  with_items: "{{ firewall_rules.ipv4.filter.user_defined }}"
+
+# TODO: Mangle table
+
+- name: "Family: IPv4, Table: nat, Chain: PREROUTING"
+  iptables:
+    action: "{{ item.action|default (omit) }}"
+    chain: PREROUTING
+    comment: "{{ item.comment|default (omit) }}"
+    ctstate: "{{ item.ctstate|default (omit) }}"
+    destination: "{{ item.destination|default (omit) }}"
+    destination_port: "{{ item.destination_port|default (omit) }}"
+    dst_range: "{{ item.dst_range|default (omit) }}"
+    flush: "{{ item.flush|default (omit) }}"
+    fragment: "{{ item.fragment|default (omit) }}"
+    gateway: "{{ item.gateway|default (omit) }}"
+    gid_owner: "{{ item.gid_owner|default (omit) }}"
+    goto: "{{ item.goto|default (omit) }}"
+    icmp_type: "{{ item.icmp_type|default (omit) }}"
+    in_interface: "{{ item.in_interface|default (omit) }}"
+    ip_version: ipv4
+    jump: "{{ item.jump|default (omit) }}"
+    limit: "{{ item.limit|default (omit) }}"
+    limit_burst: "{{ item.limit_burst|default (omit) }}"
+    log_level: "{{ item.log_level|default (omit) }}"
+    log_prefix: "{{ item.log_prefix|default (omit) }}"
+    match: "{{ item.match|default (omit) }}"
+    out_interface: "{{ item.out_interface|default (omit) }}"
+    policy: "{{ item.policy|default (omit) }}"
+    protocol: "{{ item.protocol|default (omit) }}"
+    reject_with: "{{ item.reject_with|default (omit) }}"
+    rule_num: "{{ item.rule_num|default (omit) }}"
+    set_counters: "{{ item.set_counters|default (omit) }}"
+    set_dscp_mark: "{{ item.set_dscp_mark|default (omit) }}"
+    set_dscp_mark_class: "{{ item.set_dscp_mark_class|default (omit) }}"
+    source: "{{ item.source|default (omit) }}"
+    source_port: "{{ item.source_port|default (omit) }}"
+    src_range: "{{ item.src_range|default (omit) }}"
+    state: "{{ item.state|default (omit) }}"
+    syn: "{{ item.syn|default (omit) }}"
+    table: nat
+    tcp_flags: "{{ item.tcp_flags|default (omit) }}"
+    to_destination: "{{ item.to_destination|default (omit) }}"
+    to_ports: "{{ item.to_ports|default (omit) }}"
+    to_source: "{{ item.to_source|default (omit) }}"
+    uid_owner: "{{ item.uid_owner|default (omit) }}"
+  with_items: "{{ firewall_rules.ipv4.nat.PREROUTING }}"
+
+- name: "Family: IPv4, Table: nat, Chain: INPUT"
+  iptables:
+    action: "{{ item.action|default (omit) }}"
+    chain: INPUT
+    comment: "{{ item.comment|default (omit) }}"
+    ctstate: "{{ item.ctstate|default (omit) }}"
+    destination: "{{ item.destination|default (omit) }}"
+    destination_port: "{{ item.destination_port|default (omit) }}"
+    dst_range: "{{ item.dst_range|default (omit) }}"
+    flush: "{{ item.flush|default (omit) }}"
+    fragment: "{{ item.fragment|default (omit) }}"
+    gateway: "{{ item.gateway|default (omit) }}"
+    gid_owner: "{{ item.gid_owner|default (omit) }}"
+    goto: "{{ item.goto|default (omit) }}"
+    icmp_type: "{{ item.icmp_type|default (omit) }}"
+    in_interface: "{{ item.in_interface|default (omit) }}"
+    ip_version: ipv4
+    jump: "{{ item.jump|default (omit) }}"
+    limit: "{{ item.limit|default (omit) }}"
+    limit_burst: "{{ item.limit_burst|default (omit) }}"
+    log_level: "{{ item.log_level|default (omit) }}"
+    log_prefix: "{{ item.log_prefix|default (omit) }}"
+    match: "{{ item.match|default (omit) }}"
+    out_interface: "{{ item.out_interface|default (omit) }}"
+    policy: "{{ item.policy|default (omit) }}"
+    protocol: "{{ item.protocol|default (omit) }}"
+    reject_with: "{{ item.reject_with|default (omit) }}"
+    rule_num: "{{ item.rule_num|default (omit) }}"
+    set_counters: "{{ item.set_counters|default (omit) }}"
+    set_dscp_mark: "{{ item.set_dscp_mark|default (omit) }}"
+    set_dscp_mark_class: "{{ item.set_dscp_mark_class|default (omit) }}"
+    source: "{{ item.source|default (omit) }}"
+    source_port: "{{ item.source_port|default (omit) }}"
+    src_range: "{{ item.src_range|default (omit) }}"
+    state: "{{ item.state|default (omit) }}"
+    syn: "{{ item.syn|default (omit) }}"
+    table: nat
+    tcp_flags: "{{ item.tcp_flags|default (omit) }}"
+    to_destination: "{{ item.to_destination|default (omit) }}"
+    to_ports: "{{ item.to_ports|default (omit) }}"
+    to_source: "{{ item.to_source|default (omit) }}"
+    uid_owner: "{{ item.uid_owner|default (omit) }}"
+  with_items: "{{ firewall_rules.ipv4.nat.INPUT }}"
+
+- name: "Family: IPv4, Table: nat, Chain: OUTPUT"
+  iptables:
+    action: "{{ item.action|default (omit) }}"
+    chain: OUTPUT
+    comment: "{{ item.comment|default (omit) }}"
+    ctstate: "{{ item.ctstate|default (omit) }}"
+    destination: "{{ item.destination|default (omit) }}"
+    destination_port: "{{ item.destination_port|default (omit) }}"
+    dst_range: "{{ item.dst_range|default (omit) }}"
+    flush: "{{ item.flush|default (omit) }}"
+    fragment: "{{ item.fragment|default (omit) }}"
+    gateway: "{{ item.gateway|default (omit) }}"
+    gid_owner: "{{ item.gid_owner|default (omit) }}"
+    goto: "{{ item.goto|default (omit) }}"
+    icmp_type: "{{ item.icmp_type|default (omit) }}"
+    in_interface: "{{ item.in_interface|default (omit) }}"
+    ip_version: ipv4
+    jump: "{{ item.jump|default (omit) }}"
+    limit: "{{ item.limit|default (omit) }}"
+    limit_burst: "{{ item.limit_burst|default (omit) }}"
+    log_level: "{{ item.log_level|default (omit) }}"
+    log_prefix: "{{ item.log_prefix|default (omit) }}"
+    match: "{{ item.match|default (omit) }}"
+    out_interface: "{{ item.out_interface|default (omit) }}"
+    policy: "{{ item.policy|default (omit) }}"
+    protocol: "{{ item.protocol|default (omit) }}"
+    reject_with: "{{ item.reject_with|default (omit) }}"
+    rule_num: "{{ item.rule_num|default (omit) }}"
+    set_counters: "{{ item.set_counters|default (omit) }}"
+    set_dscp_mark: "{{ item.set_dscp_mark|default (omit) }}"
+    set_dscp_mark_class: "{{ item.set_dscp_mark_class|default (omit) }}"
+    source: "{{ item.source|default (omit) }}"
+    source_port: "{{ item.source_port|default (omit) }}"
+    src_range: "{{ item.src_range|default (omit) }}"
+    state: "{{ item.state|default (omit) }}"
+    syn: "{{ item.syn|default (omit) }}"
+    table: nat
+    tcp_flags: "{{ item.tcp_flags|default (omit) }}"
+    to_destination: "{{ item.to_destination|default (omit) }}"
+    to_ports: "{{ item.to_ports|default (omit) }}"
+    to_source: "{{ item.to_source|default (omit) }}"
+    uid_owner: "{{ item.uid_owner|default (omit) }}"
+  with_items: "{{ firewall_rules.ipv4.nat.OUTPUT }}"
+
+- name: "Family: IPv4, Table: nat, Chain: POSTROUTING"
+  iptables:
+    action: "{{ item.action|default (omit) }}"
+    chain: POSTROUTING
+    comment: "{{ item.comment|default (omit) }}"
+    ctstate: "{{ item.ctstate|default (omit) }}"
+    destination: "{{ item.destination|default (omit) }}"
+    destination_port: "{{ item.destination_port|default (omit) }}"
+    dst_range: "{{ item.dst_range|default (omit) }}"
+    flush: "{{ item.flush|default (omit) }}"
+    fragment: "{{ item.fragment|default (omit) }}"
+    gateway: "{{ item.gateway|default (omit) }}"
+    gid_owner: "{{ item.gid_owner|default (omit) }}"
+    goto: "{{ item.goto|default (omit) }}"
+    icmp_type: "{{ item.icmp_type|default (omit) }}"
+    in_interface: "{{ item.in_interface|default (omit) }}"
+    ip_version: ipv4
+    jump: "{{ item.jump|default (omit) }}"
+    limit: "{{ item.limit|default (omit) }}"
+    limit_burst: "{{ item.limit_burst|default (omit) }}"
+    log_level: "{{ item.log_level|default (omit) }}"
+    log_prefix: "{{ item.log_prefix|default (omit) }}"
+    match: "{{ item.match|default (omit) }}"
+    out_interface: "{{ item.out_interface|default (omit) }}"
+    policy: "{{ item.policy|default (omit) }}"
+    protocol: "{{ item.protocol|default (omit) }}"
+    reject_with: "{{ item.reject_with|default (omit) }}"
+    rule_num: "{{ item.rule_num|default (omit) }}"
+    set_counters: "{{ item.set_counters|default (omit) }}"
+    set_dscp_mark: "{{ item.set_dscp_mark|default (omit) }}"
+    set_dscp_mark_class: "{{ item.set_dscp_mark_class|default (omit) }}"
+    source: "{{ item.source|default (omit) }}"
+    source_port: "{{ item.source_port|default (omit) }}"
+    src_range: "{{ item.src_range|default (omit) }}"
+    state: "{{ item.state|default (omit) }}"
+    syn: "{{ item.syn|default (omit) }}"
+    table: nat
+    tcp_flags: "{{ item.tcp_flags|default (omit) }}"
+    to_destination: "{{ item.to_destination|default (omit) }}"
+    to_ports: "{{ item.to_ports|default (omit) }}"
+    to_source: "{{ item.to_source|default (omit) }}"
+    uid_owner: "{{ item.uid_owner|default (omit) }}"
+  with_items: "{{ firewall_rules.ipv4.nat.POSTROUTING }}"
+
+# TODO: Raw table
+# TODO: Security table
+
+- name: "Copy /etc/network/if-pre-up.d/ipv4-firewall-rules"
+  copy:
+    src: "etc/network/if-pre-up.d/ipv4-firewall-rules"
+    dest: "/etc/network/if-pre-up.d/ipv4-firewall-rules"
+    owner: root
+    group: root
+    mode: 0755
+    backup: no
+
+- name: "Create /etc/netfilter directory"
+  file:
+    path: "/etc/netfilter"
+    recurse: yes
+    state: directory
+
+- name: "Save in-memory iptables rules to disk for persistence"
+  shell: "iptables-save > /etc/netfilter/iptables.txt"
+
+
+# =============================================================================
+#                                     IPv6
+# =============================================================================
+
+

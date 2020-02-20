@@ -1,0 +1,7 @@
+{% for k in ntp_keys %}
+#{{ k.comment }}
+{% if k.number != "" and k.type != "" and k.value != "" %}
+{{ k.number }} {{ k.type }} {{ k.value }}
+{% endif %}
+
+{% endfor %}

@@ -1,0 +1,63 @@
+#
+# initramfs.conf
+# Configuration file for mkinitramfs(8). See initramfs.conf(5).
+#
+# Note that configuration options from this file can be overridden
+# by config files in the /etc/initramfs-tools/conf.d directory.
+
+#
+# MODULES: [ most | netboot | dep | list ]
+#
+# most - Add most filesystem and all harddrive drivers.
+#
+# dep - Try and guess which modules to load.
+#
+# netboot - Add the base modules, network modules, but skip block devices.
+#
+# list - Only include modules from the 'additional modules' list
+#
+MODULES={{ initramfs_modules }}
+
+#
+# BUSYBOX: [ y | n ]
+#
+# Use busybox if available.
+#
+{% if initramfs_use_busybox %}
+BUSYBOX=y
+{% else %}
+BUSYBOX=n
+{% endif %}
+
+#
+# KEYMAP: [ y | n ]
+#
+# Load a keymap during the initramfs stage.
+#
+{% if initramfs_load_keymap %}
+KEYMAP=y
+{% else %}
+KEYMAP=n
+{% endif %}
+
+#
+# COMPRESS: [ gzip | bzip2 | lzma | lzop | xz ]
+#
+COMPRESS={{ initramfs_compression_algorithm }}
+
+#
+# NFS Section of the config.
+#
+
+#
+# DEVICE: ...
+#
+# Specify a specific network interface, like eth0
+# Overridden by optional ip= bootarg
+#
+DEVICE={{ initramfs_nfs_network_interface }}
+
+#
+# NFSROOT: [ auto | HOST:MOUNT ]
+#
+NFSROOT={{ initramfs_nfs_root }}

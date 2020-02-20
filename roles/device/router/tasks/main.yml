@@ -1,0 +1,116 @@
+
+- name: "Update apt cache and perform dist-upgrade"
+  apt:
+    upgrade: dist
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: "Install additional packages"
+  apt:
+    name: "{{ apt_packages_add }}"
+    state: present
+
+- name: "Remove unneeded packages"
+  apt:
+    name: "{{ apt_packages_remove }}"
+    state: absent
+    purge: yes
+
+- name: "Install templated config files for all VLAN interfaces"
+  template:
+    src: "etc/network/interfaces.d/template-vlan.jinja2"
+    dest: "/etc/network/interfaces.d/30-{{ item.parent_interface_name }}-{{ item.id }}"
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  with_items: "{{ virtual_vlan_interfaces }}"
+
+- name: "Install templated config files for all bridge interfaces"
+  template:
+    src: "etc/network/interfaces.d/template-bridge.jinja2"
+    dest: "/etc/network/interfaces.d/40-{{ item.name }}"
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+  with_items: "{{ virtual_bridge_interfaces }}"
+
+- name: "Create /etc/netfilter directory"
+  file:
+    path: "/etc/netfilter"
+    recurse: yes
+    state: directory
+
+- name: "Install templated basic IPv4 iptables rules"
+  template:
+    src: "etc/netfilter/iptables.txt.jinja2"
+    dest: "/etc/netfilter/iptables.txt"
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+
+#- name: "Install templated basic IPv6 iptables rules"
+#  template:
+#    src: "etc/netfilter/ip6tables.txt.jinja2"
+#    dest: "/etc/netfilter/ip6tables.txt"
+#    owner: root
+#    group: root
+#    mode: 0644
+#    backup: yes
+
+- name: "Copy /etc/network/if-pre-up.d/ipv4-firewall-rules"
+  copy:
+    src: "etc/network/if-pre-up.d/ipv4-firewall-rules"
+    dest: "/etc/network/if-pre-up.d/ipv4-firewall-rules"
+    owner: root
+    group: root
+    mode: 0755
+    backup: no
+
+#- name: "Copy /etc/network/if-pre-up.d/ipv6-firewall-rules"
+#  copy:
+#    src: "etc/network/if-pre-up.d/ipv6-firewall-rules"
+#    dest: "/etc/network/if-pre-up.d/ipv6-firewall-rules"
+#    owner: root
+#    group: root
+#    mode: 0755
+#    backup: no
+
+- name: "Install templated /etc/default/bridge-utils"
+  template:
+    src: "etc/default/bridge-utils"
+    dest: "/etc/default/bridge-utils"
+    owner: root
+    group: root
+    mode: 0644
+    backup: no
+
+- name: "Enable IPv4 forwarding in /etc/sysctl.conf"
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    state: present
+    reload: yes
+
+- name: "Enable IPv6 forwarding in /etc/sysctl.conf"
+  sysctl:
+    name: net.ipv6.conf.all.forwarding
+    value: 1
+    state: present
+    reload: yes
+
+#- name: "Enable services"
+#  systemd:
+#    enabled: yes
+#    name: "{{ item }}"
+#  with_items: "{{ services_enable }}"
+#
+#- name: "Restart services"
+#  systemd:
+#    daemon_reload: yes
+#    state: restarted
+#    name: "{{ item }}"
+#  with_items: "{{ services_restart }}"
+

@@ -1,0 +1,66 @@
+
+- name: "Install additional packages"
+  apt:
+    name: "{{ apt_packages_add }}"
+    state: present
+
+- name: "Remove unneeded packages"
+  apt:
+    name: "{{ apt_packages_remove }}"
+    state: absent
+    purge: yes
+
+- name: "Install templated /etc/bind/ddns.key"
+  template:
+    src: "etc/bind/ddns.key.jinja2"
+    dest: "/etc/bind/ddns.key"
+    owner: root
+    group: bind
+    mode: 0640
+
+- name: "Install templated /etc/bind/named.conf.local"
+  template:
+    src: "etc/bind/named.conf.local.jinja2"
+    dest: "/etc/bind/named.conf.local"
+    owner: root
+    group: bind
+    mode: 0644
+
+- name: "Install templated /etc/bind/named.conf.options"
+  template:
+    src: "etc/bind/named.conf.options.jinja2"
+    dest: "/etc/bind/named.conf.options"
+    owner: root
+    group: bind
+    mode: 0644
+
+- name: "Install templated /var/cache/bind/{{ item.file }}"
+  template:
+    src: "var/cache/bind/db.forward.jinja2"
+    dest: "/var/cache/bind/{{ item.file }}"
+    owner: root
+    group: bind
+    mode: 0644
+  with_items: "{{ dns_forward_zones }}"
+
+- name: "Install templated /var/cache/bind/{{ item.file }}"
+  template:
+    src: "var/cache/bind/db.reverse.jinja2"
+    dest: "/var/cache/bind/{{ item.file }}"
+    owner: root
+    group: bind
+    mode: 0644
+  with_items: "{{ dns_reverse_zones }}"
+
+- name: "Restart necessary services"
+  systemd:
+    state: restarted
+    name: "{{ item }}"
+  with_items: "{{ services_restart }}"
+
+- name: "Enable necessary services"
+  systemd:
+    enabled: yes
+    name: "{{ item }}"
+  with_items: "{{ services_enable }}"
+

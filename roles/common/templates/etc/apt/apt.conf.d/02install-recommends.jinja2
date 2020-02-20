@@ -1,0 +1,6 @@
+// Control automatic installation of recommended packages.
+{% if apt_install_recommended_packages %}
+APT::Install-Recommends "1";
+{% else %}
+APT::Install-Recommends "0";
+{% endif %}

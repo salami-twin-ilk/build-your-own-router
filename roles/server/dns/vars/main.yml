@@ -1,0 +1,12 @@
+
+  apt_packages_add:
+    - "bind9"
+  apt_packages_remove:
+
+  services_disable:
+  services_enable:
+    - "bind9"
+  services_restart:
+    - "bind9"
+  services_stop:
+

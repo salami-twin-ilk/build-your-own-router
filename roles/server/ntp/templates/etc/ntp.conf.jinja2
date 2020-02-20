@@ -1,0 +1,68 @@
+# /etc/ntp.conf, configuration for ntpd; see ntp.conf(5) for help
+
+driftfile /var/lib/ntp/ntp.drift
+
+statistics loopstats peerstats clockstats
+filegen loopstats file loopstats type day enable
+filegen peerstats file peerstats type day enable
+filegen clockstats file clockstats type day enable
+
+#
+# INTERFACES
+#
+{% for li in ntp_listen_interfaces %}
+#{{ li.comment }}
+{% if li.action != "" and li.interface != "" %}
+interface {{ li.action }} {{ li.interface }}
+{% endif %}
+
+{% endfor %}
+
+#
+# KEYS
+#
+keys /etc/ntp.keys
+
+#
+# UPSTREAM SERVERS
+#
+{% for us in ntp_upstream_servers %}
+#{{ us.comment }}
+{% if us.hostinfo != "" %}
+server {{ us.hostinfo }} {{ us.options }}
+{% endif %}
+
+{% endfor %}
+
+#
+# UPSTREAM POOLS
+#
+{% for up in ntp_upstream_pools %}
+#{{ up.comment }}
+{% if up.hostinfo != "" %}
+pool {{ up.hostinfo }} {{ up.options }}
+{% endif %}
+
+{% endfor %}
+
+#
+# PEERS
+#
+{% for p in ntp_peers %}
+#{{ p.comment }}
+{% if p.hostinfo != "" %}
+peer {{ p.hostinfo }} {{ p.options }}
+{% endif %}
+
+{% endfor %}
+
+#
+# RESTRICTIONS
+#
+{% for r in ntp_restrictions %}
+#{{ r.comment }}
+{% if r.hostinfo != "" %}
+restrict {{ r.hostinfo }} {{ r.restrictions }}
+{% endif %}
+
+{% endfor %}

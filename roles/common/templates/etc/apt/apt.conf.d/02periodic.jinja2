@@ -1,0 +1,29 @@
+// Control automatic management of the package lists and cache.
+APT::Periodic {
+{% if apt_periodic_enable %}
+    Enable "1";
+{% else %}
+    Enable "0";
+{% endif %}
+{% if apt_periodic_update_package_lists %}
+    Update-Package-Lists "1";
+{% else %}
+    Update-Package-Lists "0";
+{% endif %}
+{% if apt_periodic_download_upgradeable_packages %}
+    Download-Upgradeable-Packages "1";
+{% else %}
+    Download-Upgradeable-Packages "0";
+{% endif %}
+{% if apt_periodic_autoclean_interval %}
+    AutocleanInterval "1";
+{% else %}
+    AutocleanInterval "0";
+{% endif %}
+{% if apt_periodic_verbose %}
+    Verbose "1";
+{% else %}
+    Verbose "0";
+{% endif %}
+};
+

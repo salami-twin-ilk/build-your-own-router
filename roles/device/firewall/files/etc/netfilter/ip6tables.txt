@@ -1,0 +1,163 @@
+#
+# ==========
+# Filter Rules
+# ==========
+#
+*filter
+:PORT_KNOCK           - [0:0]
+:PORT_KNOCK_RESET     - [0:0]
+:PORT_KNOCK_ALLOW     - [0:0]
+:LOG_ACCEPT           - [0:0]
+:LOG_DROP             - [0:0]
+:LOG_REJECT           - [0:0]
+:LOOP_RECV            - [0:0]
+:LOOP_SEND            - [0:0]
+:HOST_RECV            - [0:0]
+:HOST_SEND            - [0:0]
+:VMWARE_HOSTONLY_RECV - [0:0]
+:VMWARE_HOSTONLY_SEND - [0:0]
+:VMWARE_NAT_RECV      - [0:0]
+:VMWARE_NAT_SEND      - [0:0]
+:FWD_VMWARE_NAT       - [0:0]
+:INPUT   DROP           [0:0]
+:FORWARD DROP           [0:0]
+:OUTPUT  DROP           [0:0]
+#
+# ==========
+# Port knocking wherewithal
+# ==========
+#
+-A PORT_KNOCK -m state --state NEW --protocol tcp --dport 64000:64999 --jump PORT_KNOCK_RESET
+-A PORT_KNOCK -m state --state NEW --protocol tcp --dport 64322       --jump PORT_KNOCK_ALLOW
+-A PORT_KNOCK_RESET --jump LOG --log-prefix "PORT_KNOCK_RESET: "
+-A PORT_KNOCK_RESET -m recent --name port_knocked --remove --rsource
+-A PORT_KNOCK_ALLOW --jump LOG --log-prefix "PORT_KNOCK_ALLOW: "
+-A PORT_KNOCK_ALLOW -m recent --name port_knocked --set --rsource
+#
+# ==========
+# ACCEPT with LOGGING
+# ==========
+#
+-A LOG_ACCEPT --jump LOG --log-prefix "ACCEPT: "
+-A LOG_ACCEPT --jump ACCEPT
+#
+# ==========
+# DROP with LOGGING
+# ==========
+#
+-A LOG_DROP --jump LOG --log-prefix "DROP: "
+-A LOG_DROP --jump DROP
+#
+# ==========
+# REJECT with LOGGING
+# ==========
+#
+-A LOG_REJECT --jump LOG --log-prefix "REJECT: "
+-A LOG_REJECT --jump REJECT
+#
+# ==========
+# Allow everything in and out on loopback
+# ==========
+#
+-A LOOP_RECV --jump ACCEPT
+-A LOOP_SEND --jump ACCEPT
+#
+# ==========
+# Allow little to come in to the host
+# ==========
+#
+-A HOST_RECV -m state --state INVALID --jump DROP
+-A HOST_RECV -m state --state ESTABLISHED,RELATED --jump ACCEPT
+#-A HOST_RECV -m state --state NEW --protocol udp --dport domain  --jump ACCEPT
+#-A EXT_RECV -m state --state NEW --protocol tcp --dport ssh     -m recent --name port_knocked --seconds 7200 --update --jump ACCEPT
+#-A EXT_RECV --jump PORT_KNOCK
+-A HOST_RECV --jump LOG_DROP
+#
+-A VMWARE_HOSTONLY_RECV -m state --state INVALID --jump DROP
+-A VMWARE_HOSTONLY_RECV --protocol icmpv6 --jump ACCEPT
+-A VMWARE_HOSTONLY_RECV -m state --state ESTABLISHED,RELATED --jump ACCEPT
+-A VMWARE_HOSTONLY_RECV -m state --state NEW --protocol udp --dport bootps --jump ACCEPT
+-A VMWARE_HOSTONLY_RECV -m state --state NEW --protocol tcp --dport ssh    --jump ACCEPT
+-A VMWARE_HOSTONLY_RECV --jump LOG_DROP
+#
+-A VMWARE_NAT_RECV -m state --state INVALID --jump DROP
+-A VMWARE_NAT_RECV --protocol icmpv6 --jump ACCEPT
+-A VMWARE_NAT_RECV -m state --state ESTABLISHED,RELATED --jump ACCEPT
+-A VMWARE_NAT_RECV -m state --state NEW --protocol udp --dport bootps --jump ACCEPT
+-A VMWARE_NAT_RECV -m state --state NEW --protocol tcp --dport ssh    --jump ACCEPT
+-A VMWARE_NAT_RECV --jump LOG_DROP
+#
+# ==========
+# Allow the host to initiate little traffic
+# ==========
+#
+-A HOST_SEND -m state --state INVALID --jump DROP
+-A HOST_SEND --protocol icmpv6 --jump ACCEPT
+-A HOST_SEND -m state --state ESTABLISHED,RELATED --jump ACCEPT
+-A HOST_SEND -m state --state NEW --protocol udp --dport domain --jump ACCEPT
+-A HOST_SEND -m state --state NEW --protocol tcp --dport domain --jump ACCEPT
+-A HOST_SEND -m state --state NEW --protocol udp --dport ntp    --jump ACCEPT
+-A HOST_SEND -m state --state NEW --protocol udp --dport bootps --jump ACCEPT
+-A HOST_SEND -m state --state NEW --protocol tcp --dport http   --jump ACCEPT
+-A HOST_SEND -m state --state NEW --protocol tcp --dport https  --jump ACCEPT
+-A HOST_SEND --jump LOG_REJECT
+#
+-A VMWARE_HOSTONLY_SEND -m state --state INVALID --jump DROP
+-A VMWARE_HOSTONLY_SEND --protocol icmpv6 --jump ACCEPT
+-A VMWARE_HOSTONLY_SEND -m state --state ESTABLISHED,RELATED --jump ACCEPT
+-A VMWARE_HOSTONLY_SEND -m state --state NEW --protocol tcp --dport ssh --jump ACCEPT
+-A VMWARE_HOSTONLY_SEND --jump LOG_DROP
+#
+-A VMWARE_NAT_SEND -m state --state INVALID --jump DROP
+-A VMWARE_NAT_SEND --protocol icmpv6 --jump ACCEPT
+-A VMWARE_NAT_SEND -m state --state ESTABLISHED,RELATED --jump ACCEPT
+-A VMWARE_NAT_SEND -m state --state NEW --protocol tcp --dport ssh --jump ACCEPT
+-A VMWARE_NAT_SEND --jump LOG_DROP
+#
+# ==========
+# Forward VM traffic to the outside
+# ==========
+#
+-A FWD_VMWARE_NAT -m state --state INVALID --jump DROP
+-A FWD_VMWARE_NAT --protocol icmpv6 --jump ACCEPT
+-A FWD_VMWARE_NAT -m state --state ESTABLISHED,RELATED --jump ACCEPT
+-A FWD_VMWARE_NAT -m state --state NEW --jump ACCEPT
+-A FWD_VMWARE_NAT --jump LOG_REJECT
+#
+# ==========
+# Jumps based on INPUT interface
+# ==========
+#
+-A INPUT -i lo     --jump LOOP_RECV
+-A INPUT -i eth0   --jump HOST_RECV
+-A INPUT -i wlan0  --jump HOST_RECV
+-A INPUT -i vmnet1 --jump VMWARE_HOSTONLY_RECV
+-A INPUT -i vmnet8 --jump VMWARE_NAT_RECV
+-A INPUT           --jump LOG_DROP
+#
+# ==========
+# Jumps based on OUTPUT interface
+# ==========
+#
+-A OUTPUT -o lo     --jump LOOP_SEND
+-A OUTPUT -o eth0   --jump HOST_SEND
+-A OUTPUT -o wlan0  --jump HOST_SEND
+-A OUTPUT -o vmnet1 --jump VMWARE_HOSTONLY_SEND
+-A OUTPUT -o vmnet8 --jump VMWARE_NAT_SEND
+-A OUTPUT           --jump LOG_DROP
+#
+# ==========
+# Jumps based on FORWARD between interfaces and sources/destinations
+# ==========
+#
+-A FORWARD -i eth0   -o vmnet8 --jump FWD_VMWARE_NAT
+-A FORWARD -i vmnet8 -o eth0   --jump FWD_VMWARE_NAT
+-A FORWARD -i wlan0  -o vmnet8 --jump FWD_VMWARE_NAT
+-A FORWARD -i vmnet8 -o wlan0  --jump FWD_VMWARE_NAT
+-A FORWARD --jump LOG_DROP
+#
+# ==========
+# Commit - Filter
+# ==========
+#
+COMMIT
