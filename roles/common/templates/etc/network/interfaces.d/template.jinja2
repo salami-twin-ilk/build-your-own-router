@@ -1,14 +1,36 @@
+{% if item.comment is defined %}
 # {{ item.comment }}
+{% endif %}
 allow-hotplug {{ item.name }}
+{% if item.ipv4_address_type is defined %}
+{% if item.ipv4_address_type == "static" or item.ipv4_address_type == "dhcp" or item.ipv4_address_type == "manual" %}
+iface {{ item.name }} inet {{ item.ipv4_address_type }}
 {% if item.ipv4_address_type == "static" %}
-iface {{ item.name }} inet static
 {% for a in item.ipv4_addresses %}
    address {{ a.address }}
    netmask {{ a.netmask }}
+{% if a.gateway is defined %}
+   gateway {{ a.gateway }}
+{% endif %}
 {% endfor %}
-{% elif item.ipv4_address_type == "dhcp" or item.ipv4_address_type == "manual" %}
-iface {{ item.name }} inet {{ item.ipv4_address_type }}
+{% endif %}
+{% endif %}
 {% else %}
 iface {{ item.name }} inet manual
 {% endif %}
-
+{% if item.ipv6_address_type is defined %}
+{% if item.ipv6_address_type == "static" or item.ipv6_address_type == "dhcp" or item.ipv6_address_type == "manual" %}
+iface {{ item.name }} inet6 {{ item.ipv6_address_type }}
+{% if item.ipv6_address_type == "static" %}
+{% for a in item.ipv6_addresses %}
+   address {{ a.address }}
+   netmask {{ a.netmask }}
+{% if a.gateway is defined %}
+   gateway {{ a.gateway }}
+{% endif %}
+{% endfor %}
+{% endif %}
+{% endif %}
+{% else %}
+iface {{ item.name }} inet6 manual
+{% endif %}
