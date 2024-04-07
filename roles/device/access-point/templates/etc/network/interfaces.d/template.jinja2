@@ -1,6 +1,8 @@
+{% if item.comment is defined %}
 # {{ item.comment }}
+{% endif %}
 allow-hotplug {{ item.physical_interface_name }}
 iface {{ item.physical_interface_name }} inet manual
    pre-up  ip link set $IFACE address {{ item.bssid }}
 iface {{ item.physical_interface_name }} inet6 manual
-
+   pre-up  ip link set $IFACE address {{ item.bssid }}
